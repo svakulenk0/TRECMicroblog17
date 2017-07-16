@@ -2,14 +2,11 @@
 
 Evaluation will take place from July 25 00:00:00 UTC to August 3 23:59:59 UTC
 
-Scenario A (push notifications).
+Scenario A. Push notifications should be:
 
-Push notifications should be:
-
-* relevant (on topic)
-* timely (provide updates as soon after the actual event occurrence as possible)
-* novel (users should not be pushed multiple notifications that say the same thing)
-
+* relevant (on topic) -- tweet-query similarity ranking
+* timely (provide updates as soon after the actual event occurrence as possible) -- Kafka, RabbitMQ queues
+* novel (users should not be pushed multiple notifications that say the same thing) -- results diversification, tweet-tweet similarity
 
 ## Requirements
 
@@ -29,4 +26,4 @@ es_search.py
 
 ## References
 
-1. http://trecrts.github.io
+1. TREC Real-Time Summarization Track http://trecrts.github.io
