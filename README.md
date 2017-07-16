@@ -1,25 +1,32 @@
-# Feel the Buzz - a JobTweetsClassifier
+# TREC 2017 Real-Time Summarization
 
-Goal: text classifier for tweets containing job offers
+Evaluation will take place from July 25 00:00:00 UTC to August 3 23:59:59 UTC
 
-Requirements: minimum supervision in terms of prior linguistic knowledge, e.g. a character-based classifier (characters as input to the classifier)
+Scenario A (push notifications).
 
-## Roadmap
+Push notifications should be:
 
-1. Load dump of tweets (Settings -> Content -> Your Twitter archive -> Request your archive)
-2. Manually mark tweets with a job posting as positive samples (True)
-3. Sample and format the dataset as a CSV: one tweet per line with balanced classes and shuffled samples
-4. Train a classifier to detect job tweets, e.g. fastText
+* relevant (on topic)
+* timely (provide updates as soon after the actual event occurrence as possible)
+* novel (users should not be pushed multiple notifications that say the same thing)
 
-Also, handpicked tweet samples from @GovernmentJobs @GuardianJobs @DisneyAnimJobs
-@USFWSJobs @ManulifeJobs @tmj_il_usa_jobs @tmj_hou_edu @eventcojobs @BIDMCCareers #job #jobs #jobfairy #ITjobs #NowHiring #Hiring #applynow #internship
 
 ## Requirements
 
-* [fasttext](https://github.com/facebookresearch/fastText)
-* pandas
+* tweepy
+* elasticsearch
+
+## Usage
+
+* Monitor Twitter stream for TREC topics:
+topic_client.py
+
+* Test sample queries against the TREC topics:
+es_search.py
+
+## Acknowledgements
+
 
 ## References
 
-1. [Crepe](https://github.com/zhangxiangxiao/Crepe)
-2. [fastText tutorial](https://github.com/facebookresearch/fastText/blob/master/tutorials/supervised-learning.md)
+1. http://trecrts.github.io
