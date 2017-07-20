@@ -21,6 +21,22 @@ topic_client.py
 * Test sample queries against the TREC topics:
 es_search.py
 
+
+## Setup
+
+* Get client ids for the TREC API (save to CLIENT_IDS in settings.py)
+
+
+register_clients()
+
+
+* Get topics from the TREC API
+
+
+get_topics()
+
+
+
 ## Acknowledgements
 
 
