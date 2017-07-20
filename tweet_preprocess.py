@@ -10,8 +10,10 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.stem.snowball import SnowballStemmer
 
-from twokenize import tokenizeRawTweetText, punctSeq
+from twokenize import tokenizeRawTweetText
+from stoplist_twitter import STOPLIST_TW
 
+SAMPLE_TOPICS = ['Information concerning possible side effects of the HPV vaccine']
 
 SAMPLE_TWEETS = [ 
                 '''@darlene_a_10101 nice try, but no. just a person who knows we live by the rule of law. not the rule of what you think should be.''',
@@ -24,29 +26,40 @@ SAMPLE_TWEETS = [
 # @dearanathema i am,, sorry
                 ]
 
+stoplist = set(nltk.corpus.stopwords.words("english") + STOPLIST_TW)
+
 
 def regex_based(text):
 
     # translate_table = dict((ord(char), None) for char in string.punctuation)
 
     #####remove hashtag#####
-    clean_text = re.sub(r'#[^\s]+', '', text)
+    clean_text = re.sub(r'#[^\s]+ ', '', text)
     #####remove @ #####
-    clean_text = re.sub(r'@[^\s]+', '', clean_text)
+    clean_text = re.sub(r'@[^\s]+ ', '', clean_text)
     #####remove all term behind http#####
-    clean_text = re.sub(r'http\S+', '', clean_text)
+    clean_text = re.sub(r'http\S+ ', '', clean_text)
     # re.sub(r"(?:\@|https?\://)\S+", "", doc)
     # remove redundant spaces
     # clean_text = clean_text.strip()
     # print clean_text
     # remove punctuation
-    # clean_text = clean_text.translate(translate_table)
+    clean_text = re.sub(r'[^a-zA-Z ]', '', clean_text)
+
+    tokens = [token for token in clean_text.split(' ') if token not in stoplist]
+    # clean_text = ' '.join(set(tokens))
+    clean_text = ' '.join(tokens)
 
     return clean_text
 
 
 def twokenize(text):
     clean_text = re.sub(r"(?:\@|https?\://)\S+", "", text)
+
+    # remove non alpha chars
+    # clean_text = filter(str.isalnum, clean_text)
+    regex = re.compile('[^a-zA-Z ]')
+    clean_text = regex.sub('', clean_text)
 
     # Remove documents with less 100 words (some tweets contain only URLs)
     # documents = [doc for doc in documents if len(doc) > 100]
@@ -59,13 +72,12 @@ def twokenize(text):
     # unigrams = [w for doc in documents for w in doc if len(w) == 1]
     # bigrams = [w for doc in documents for w in doc if len(w) == 2]
     # print bigrams
-    stoplist = set(nltk.corpus.stopwords.words("english"))
         # + STOPLIST_TW + STOPLIST + unigrams + bigrams)
     # and strip #
-    tokens = [token.lstrip('#') for token in tokens if token not in stoplist]
+    tokens = [token for token in tokens if token not in stoplist]
     # print tokens
     # remove punctuation tokens
-    tokens = [token for token in tokens if not re.match(punctSeq, token)]
+    # tokens = [token for token in tokens if not re.match(punctSeq, token)]
 
     # lmtzr = WordNetLemmatizer()
     # tokens = [lmtzr.lemmatize(token) for token in tokens]
@@ -73,13 +85,8 @@ def twokenize(text):
     stemmer = SnowballStemmer("english")
     tokens = [stemmer.stem(token) for token in tokens]
 
-    clean_text = ' '.join(tokens)
+    clean_text = ' '.join(set(tokens))
     return clean_text
-
-
-def stem(text):
-    return " ".join()
-
 
 
 def test_tweet_preprocess(preprocess_function):
