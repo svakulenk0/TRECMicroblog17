@@ -58,15 +58,19 @@ def twokenize(text):
 
     # remove non alpha chars
     # clean_text = filter(str.isalnum, clean_text)
-    regex = re.compile('[^a-zA-Z ]')
-    clean_text = regex.sub('', clean_text)
+    # regex = re.compile('[^a-zA-Z ]')
+    # clean_text = regex.sub('', clean_text)
+    clean_text = re.sub(r'[^\x00-\x7F]+',' ', clean_text)
+    # strip punctuation
+    # clean_text = clean_text.decode('unicode_escape').encode('ascii','ignore')
+    translator = string.maketrans(string.punctuation, ' '*len(string.punctuation)) #map punctuation to space
+    clean_text = str(clean_text).translate(translator)
 
     # Remove documents with less 100 words (some tweets contain only URLs)
     # documents = [doc for doc in documents if len(doc) > 100]
 
     # Tokenize
     tokens = tokenizeRawTweetText(clean_text.lower())
-    # print documents
 
     # Remove stop words
     # unigrams = [w for doc in documents for w in doc if len(w) == 1]
@@ -75,6 +79,7 @@ def twokenize(text):
         # + STOPLIST_TW + STOPLIST + unigrams + bigrams)
     # and strip #
     tokens = [token for token in tokens if token not in stoplist]
+    # tokens = [token for token in tokens if token not in string.punctuation]
     # print tokens
     # remove punctuation tokens
     # tokens = [token for token in tokens if not re.match(punctSeq, token)]
@@ -83,17 +88,18 @@ def twokenize(text):
     # tokens = [lmtzr.lemmatize(token) for token in tokens]
 
     stemmer = SnowballStemmer("english")
+    # print tokens
     tokens = [stemmer.stem(token) for token in tokens]
 
     clean_text = ' '.join(set(tokens))
     return clean_text
 
 
-def test_tweet_preprocess(preprocess_function):
-    for tweet in SAMPLE_TWEETS:
-        print preprocess_function(tweet)
+def test_tweet_preprocess(preprocess_function, tweet):
+    # for tweet in SAMPLE_TWEETS:
+    print preprocess_function(tweet)
 
 
 if __name__ == '__main__':
     # test_tweet_preprocess(regex_based)
-    test_tweet_preprocess(twokenize)
+    test_tweet_preprocess(twokenize, tweet='''we just ordered pizza at panera bread?''')
