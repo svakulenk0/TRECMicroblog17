@@ -107,12 +107,10 @@ def stream_tweets():
             stream = Stream(auth, listener)
             print 'Listening...'
             stream.sample(languages=['en'])
-        except IncompleteRead:
+        except Exception as e:
             # reconnect on exceptions
+            # print e
             continue
-        except KeyboardInterrupt:
-            stream.disconnect()
-            break
 
 
 def get_topics(clientid=CLIENT_IDS[0], path=SAMPLE_TOPICS[1]):
