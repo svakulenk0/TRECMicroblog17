@@ -10,23 +10,24 @@ from settings import *
 from mappings import *
 from tweet_preprocess import twokenize
 from conceptualization import babelfy_query
+from queries import multi_weighted
 
 
-FALSE = ['omg that is not related', '2017 2017 2017', '''What takes people so long to order at Panera Bread? It's like the people in front of me are ordering in Morse code''',
-        'My dear Barry, thank you for that lovely pic. You reminded me great moments. Your CD, your songs, your music, but the best your voice.',
-        '''#wallofsport news: chelsea's antonio rudiger: i joined club because of antonio conte https://t.co/avo5zli2ne''',
-        '[to read] searching for the best hotels lincoln city oregon https://t.co/giv9fmwaj0',
-        'good morning friends.... after long time again came to wb.... its like returning in to the ocean of joy.',
-        '''we're #hiring! click to apply: maintenance technician - tire care - https://t.co/kfpedznzdp #automotive #meadowview, va #job #jobs''',
-        '''"each wrinkle and line is to show life's wonderful and more difficult points in time wherein our moments of laught…… https://t.co/qj5jowktdg''']
+FALSE = [
+            '''wand hes show long fact need world joze cole hate best''',
+            '''noida lead provid cheap india websit design respons compani best''',
+            '''s''',
+            '''cranston bryan notaaron show ruin itnevr actor side wher amp paul charact think bettr''',
+            '''album ankur fre song tyagi ts music snake shadi come fact shook''',
+            '''great good woman make thing doesnt take man''',
+            '''korea north world rao visit honest bbc santosh moral consid respons news''',
+            '''dizoard mountain le franc rider tour col conquer var final stage''',
+            '''plate menu review swindian hey know interest editori small'''
+        ]
 
-TRUE = ['i am ordering sweet roll at panera bread', 'we just ordered pizza at panera bread', 'side effect of the HPV vaccine is headache',
-        'my visit to Petra was amazing i highly recommend to the see the cave this tour is a must',
-        'Everyone will tell you that you need a minimum for 2-4 days in Petra but do you really?! Find out what we recommend https://goo.gl/VYQQeN ',
-        'Got to the bridge &, like so many songs, smt reminded me of barry manilow version of "Could It Be Magic," one of the best pop songs ever.',
-        '''hoppy sour: citra by almanac beer company found at stubby's gastropub. your new best friend.''',
-        'The 10 best Barry Manilow songs',
-        'Barry your songs are the best gift ever. I remember my mom and I singing *badly Mandy in the car. Thanks']
+TRUE = [
+            '''The best beach in the world is in Australia near the coral reef'''
+       ]
 
 
 class ESClient():
@@ -44,9 +45,12 @@ class ESClient():
             return results['hits'][0]
         return None
 
-    def search_topics(self, query, threshold=14):
+    def search_topics(self, query, threshold=10, explain=False):
         # print query
-        results = self.es.search(index=self.index, q=query, doc_type='topics', analyzer='english')['hits']
+        request = multi_weighted
+        request['query']['multi_match']['query'] = query
+        # results = self.es.search(index=self.index, q=query, doc_type='topics', analyzer='english', explain=explain, size=1)['hits']
+        results = self.es.search(index=self.index, body=request, doc_type='topics', explain=explain, size=1)['hits']
         if results['max_score'] > threshold:
             return results['hits'][0]
         return None
@@ -72,14 +76,16 @@ class ESClient():
         self.es.indices.create(index=self.index, ignore=400, body={})
         for topic in topics_json:
             description = twokenize(topic['description'])
+            description = twokenize(topic['description'])
             narrative = twokenize(topic['narrative'])
-            title = topic["title"].lower()
+            title = twokenize(topic['title'])
             print title
-            title_babelfy = babelfy_query(title)
-            print title_babelfy
+            # title_babelfy = babelfy_query(title)
+            # print title_babelfy
             self.es.index(index=self.index, doc_type='topics', id=topic['topid'],
-                          body={'title': title,
-                                'title_babelfy': title_babelfy,
+                          body={'title': topic["title"].lower(),
+                                'title_stem': title,
+                                # 'title_babelfy': title_babelfy,
                                 'description_stem': description,
                                 'narrative_stem': narrative,
                                 'description': topic["description"].lower(),
@@ -93,28 +99,38 @@ def load_topics_in_ES(file, index_name):
     es.load_sample_topics(topics_json)
 
 
-def test_search(debug=True):
+def test_search(debug=False, explain=False):
     es = ESClient(index='trec17sample')
-    for tweet in FALSE:
+    nerrors = 0
+    for query in FALSE:
     # for tweet in SAMPLE_TWEETS:
-        results = es.search_topics(query=tweet)
-        report_results(tweet, results, es)
-        if results:
-            print 'Tweet:', tweet
-            print "Error FP!"
-    for tweet in TRUE:
         # tweet = twokenize(tweet)
+        if debug:
+            results = es.search_topics(query=query, threshold=0, explain=explain)
+            report_results(query, results, es)
+        else:
+            results = es.search_topics(query=query)
+            if results:
+                print 'Query:', query
+                print "Error FP!"
+                nerrors += 1
+
+    for tweet in TRUE:
+        query = twokenize(tweet)
         # print tweet
     # for tweet in SAMPLE_TWEETS:
         if debug:
-            results = es.search_topics(query=tweet, threshold=0)
-            report_results(tweet, results, es)
+            results = es.search_topics(query=query, threshold=0, explain=explain)
+            report_results(query, results, es)
         else:
-            results = es.search_topics(query=tweet)
-        if not results:
-            print 'Tweet:', tweet
-            print "Error TP!"
-            print results
+            results = es.search_topics(query=query)
+            if not results:
+                print 'Query:', query
+                print "Error FN!"
+                print results
+                nerrors += 1
+
+    print '#Errors: ', nerrors
 
 
 def report_results(tweet, results, es):
@@ -151,12 +167,12 @@ def report_results(tweet, results, es):
 
 def load_topics_from_file(i=0):
     # 0 for training topics, 1 for production
-    load_topics_in_ES(TOPIC_FILES[i], INDICES[i])
+    load_topics_in_ES(SAMPLE_TOPICS[i], TEST_INDEX)
 
 
 def test_duplicate_detection():
     # TODO ??
-    tweet1 = 'omg that is not related anyway wtf'
+    tweet1 = 'omg that is not related'
     tweet2 = 'omg that is not related'
 
     # preprocess tweets
@@ -178,10 +194,11 @@ def test_duplicate_detection():
 
 
 if __name__ == '__main__':
-    test_duplicate_detection()
+    # test_duplicate_detection()
     # test_titles_search()
+    # load_topics_from_file()
 
-    # test_search()
+    test_search()
 
     # results = es.count(query='panera Bread')
     # print results['count']
