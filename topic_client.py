@@ -16,7 +16,7 @@ topics_matrix = None
 twitter_client = None
 
 # set up ES connection
-es = ESClient(index='trec17sample')
+es = ESClient(index=TEST_INDEX)
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -57,7 +57,8 @@ class TopicListener(StreamListener):
 
                     # print 'Mentions:', mentions
                     print results['_score']
-                    print results['_source']['title']
+                    title = results['_source']['title']
+                    print title
                     print results['_source']['description']
                     print results['_source']['narrative']
 
@@ -65,7 +66,8 @@ class TopicListener(StreamListener):
 
                     # send push notification
                     resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
-                    twitter_client.retweet(status.id)
+                    twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (status.user.screen_name, status.id))
+                    # twitter_client.retweet(status.id)
                     # print resp TODO 204 correct?
 
                     # store tweets that have been reported to ES
