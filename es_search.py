@@ -10,7 +10,7 @@ from settings import *
 from mappings import *
 from tweet_preprocess import twokenize, stoplist
 from conceptualization import babelfy_query
-from relevance_feedback import boosting_relevance
+# from relevance_feedback import boosting_relevance
 
 
 TOPIC_SIM_THRESHOLD = 37
@@ -59,21 +59,21 @@ class ESClient():
     def search_with_relevance(self, tweet):
         return self.es.search(index=self.index, q=twokenize(tweet), doc_type='topics')['hits']
 
-    def search_topics(self, query, threshold=TOPIC_SIM_THRESHOLD, explain=False, request=boosting_relevance):
-        # print query
-        # request = multi_weighted
-        request['query']['boosting']['positive']['multi_match']['query'] = query
-        # request['query']['multi_match']['query'] = query
-        request['query']['boosting']['negative']['term']['irrelevant'] = query
-        # results = self.es.search(index=self.index, q=query, doc_type='topics')['hits']
-        results = self.es.search(index=self.index, body=request, doc_type='topics', explain=explain, size=1)['hits']
-        if results['max_score'] > threshold:
-            # check exact match on topic title
-            topic = results['hits'][0]
-            title = set(topic['_source']['title_stem'].split(' '))
-            if title.issubset(set(query.split(' '))):
-                return topic
-        return None
+    # def search_topics(self, query, threshold=TOPIC_SIM_THRESHOLD, explain=False, request=boosting_relevance):
+    #     # print query
+    #     # request = multi_weighted
+    #     request['query']['boosting']['positive']['multi_match']['query'] = query
+    #     # request['query']['multi_match']['query'] = query
+    #     request['query']['boosting']['negative']['term']['irrelevant'] = query
+    #     # results = self.es.search(index=self.index, q=query, doc_type='topics')['hits']
+    #     results = self.es.search(index=self.index, body=request, doc_type='topics', explain=explain, size=1)['hits']
+    #     if results['max_score'] > threshold:
+    #         # check exact match on topic title
+    #         topic = results['hits'][0]
+    #         title = set(topic['_source']['title_stem'].split(' '))
+    #         if title.issubset(set(query.split(' '))):
+    #             return topic
+    #     return None
 
     def search_all(self, query, threshold=40, explain=False):
         request = multi
