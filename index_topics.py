@@ -25,43 +25,14 @@ class ESClient():
         self.es.indices.create(index=self.index, body=create_index_body)
 
         for topic in topics_json:
+
             title = topic['title']
-
             description = topic['description']
-
-            # table = {ord(char): None for char in string.punctuation}
-            # description_clean = description.translate(table)
-            
-            # description = description.translate(None, string.punctuation)
-
             narrative = topic['narrative']
-            # narrative_clean = narrative.translate(table)
-
-
-            # td = ' '.join([title, description, narrative])
-
-            # print td
-
-
-            # relevant, irrelevant = [], []
-            # if 'relevant' in topic.keys():
-            #     relevant = [twokenize(tweet) for tweet in topic['relevant']]
-            # if 'irrelevant' in topic.keys():
-            #     irrelevant = [twokenize(tweet) for tweet in topic['irrelevant']]
-
-            # # title_babelfy = babelfy_query(title)
-            # # print title_babelfy
             self.es.index(index=self.index, doc_type='topics', id=topic['topid'],
                           body={'title': title,
-            #                     'title_stem': title,
-            #                     # 'title_babelfy': title_babelfy,
-            #                     'description_stem': description,
-            #                     'narrative_stem': narrative,
-                                # 'td': td,
                                 'description': description,
                                 'narrative': narrative,
-            #                     'relevant': relevant,
-            #                     'irrelevant': irrelevant
                                 })
 
 
