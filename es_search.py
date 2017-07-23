@@ -191,7 +191,12 @@ def load_topics_in_ES(file, index_name):
 
 def test_search_all():
     es = ESClient(index=INDEX)
-    text = "Katy Perry and Taylor Swift feud" #u'_score': 56.553635
+    # text = "Katy Perry and Taylor Swift feud" #u'_score': 56.553635
+    # text = "best boyfriend eating ice cream" #u'_score': 56.553635
+    text = "best ice cream ever" #u'_score': 56.553635
+    # 28
+    # text = "The Iris Tank One Piece Swimsuit is a classic statement one piece, perfect for every beach girl. The features of... http://fb.me/1wXYqZnKy" #u'_score': 56.553635
+    # text = "One Piece anime" # 39 threshold = 29!!!
     # text = "side effect of the HPV vaccine" # u'_score': 48.15171
     # text = "term limit politicians" #42.087566
     # text = "Im ordering pizza at Panera Bread" #44.941032
@@ -202,12 +207,13 @@ def test_search_all():
     # 11.242464
     # text = '''uoiae ＠llililill  july 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly …'''
     # remove duplicates
-    text = ' '.join(set(text.split(' ')))
+    text = twokenize(text)
+    # text = ' '.join(set(text.split(' ')))
     # threshold = 40
     # tokens = text.split(" ")
     # clean_text = [token for token in tokens if token not in stoplist]
     # query = twokenize(text)
-    results = es.search_all(query=text, explain=True)
+    results = es.search_all(query=text, explain=True, threshold=29)
     print results
     # topic = results['hits']['hits'][0]
     # title_terms = set(topic['_source']['title_terms'])
@@ -356,4 +362,4 @@ def test_duplicate_detection():
 if __name__ == '__main__':
     # reset: reload topics to ES
     # load_topics_from_file()
-    test_duplicate_detection()
+    test_search_all()
