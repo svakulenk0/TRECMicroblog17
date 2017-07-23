@@ -2,10 +2,19 @@
 21 july 2017
 svakulenko
 '''
+import json
 
 from tweepy import API, OAuthHandler
 
 from settings import *
+
+
+def load_topics(file=TOPICS):
+    with open(file, "r") as f:
+        topics_json = json.load(f)
+        for topic in topics_json:
+            title = topic['title']
+            print title
 
 
 def clean_up_my_timeline(ntweets=100):
@@ -25,4 +34,4 @@ def clean_up_my_timeline(ntweets=100):
 
 
 if __name__ == '__main__':
-    clean_up_my_timeline()
+    load_topics()
