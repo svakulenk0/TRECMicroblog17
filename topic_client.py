@@ -8,7 +8,7 @@ from httplib import IncompleteRead # Python 2
 
 from settings import *
 from es_search import ESClient
-from tweet_preprocess import twokenize
+from tweet_preprocess import twokenize, f7
 
 
 topics = dict()
@@ -29,59 +29,61 @@ class TopicListener(StreamListener):
     def on_status(self, status):
         author = status.user.screen_name
         # ignore retweets
-        # if not hasattr(status,'retweeted_status') and author != MY_NAME:
+        if not hasattr(status,'retweeted_status'):
         # if author != MY_NAME:
-        text = status.text.lower().replace('\n', '')
-        text = ' '.join([author, text])
-        report = text
-        if status.entities[u'user_mentions']:
-            mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
-            report += '\nMentions: ' + mentions
-            text = ' '.join([text, mentions])
-        if status.entities[u'urls']:
-            report += '\nURL'
-        if [u'media'] in status.entities.keys():
-            report += '\nMEDIA'
+            text = status.text.replace('\n', '')
+            text = ' '.join([author, text])
+            report = text
+            if status.entities[u'user_mentions']:
+                mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
+                report += '\nMentions: ' + mentions
+                text = ' '.join([text, mentions])
+            if status.entities[u'urls']:
+                report += '\nURL'
+            if [u'media'] in status.entities.keys():
+                report += '\nMEDIA'
 
-        # preprocess tweet
-        # query = twokenize(text)
-        # query = text
-        query = ' '.join(set(text.split(' ')))
+            # preprocess tweet
+            # query = twokenize(text)
+            tokens = es.tokenize_in_es(text)
+            query = ' '.join(f7(tokens))
+            # query = text
+            # query = ' '.join(set(text.split(' ')))
 
-        # query elastic search
-        # results = es.search_topics(query=query)
-        # results = es.search_titles(query=query, threshold=6)
-        # results = es.search_td(query=query, threshold=8, explain=True)
-        results = es.search_all(query=query, threshold=42)
-        if results:
-            # print query
-            # check duplicates
-            duplicates = es.search_tweets(query=query)
-            if not duplicates:
-                # report tweet
-                print 'Tweet:', report
-                # sent to ES
-                print 'Query:', query
+            # query elastic search
+            # results = es.search_topics(query=query)
+            # results = es.search_titles(query=query, threshold=6)
+            # results = es.search_td(query=query, threshold=8, explain=True)
+            results = es.search_all(query=query, threshold=19)
+            if results:
+                # print query
+                # check duplicates
+                duplicates = es.search_tweets(query=query)
+                if not duplicates:
+                    # report tweet
+                    print 'Tweet:', report
+                    # sent to ES
+                    print 'Query:', query
 
-                # print 'Mentions:', mentions
-                print results['_score']
-                title = results['_source']['title']
-                print title
-                print results['_source']['description']
-                print results['_source']['narrative']
+                    # print 'Mentions:', mentions
+                    print results['_score']
+                    title = results['_source']['title']
+                    print title
+                    print results['_source']['description']
+                    print results['_source']['narrative']
 
-                topid = results['_id']
+                    topid = results['_id']
 
-                # send push notification
-                resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
-                # assert resp == '<Response [204]>'
+                    # send push notification
+                    # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
+                    # assert resp == '<Response [204]>'
 
-                twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
-                # twitter_client.retweet(status.id)
+                    # twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
+                    # twitter_client.retweet(status.id)
 
-                # store tweets that have been reported to ES
-                es.store_tweet(topid, query)
-                print '\n'
+                    # store tweets that have been reported to ES
+                    es.store_tweet(topid, query)
+                    print '\n'
 
         return True
 
