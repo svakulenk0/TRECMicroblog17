@@ -53,7 +53,7 @@ def regex_based(text):
     return clean_text
 
 
-def twokenize(text):
+def twokenize(text, no_duplicates=True, stem=True):
     clean_text = re.sub(r"(?:\@|https?\://)\S+", "", text)
 
     # remove non alpha chars
@@ -70,7 +70,8 @@ def twokenize(text):
     # documents = [doc for doc in documents if len(doc) > 100]
 
     # Tokenize
-    tokens = tokenizeRawTweetText(clean_text.lower())
+    # tokens = tokenizeRawTweetText(clean_text.lower())
+    tokens = tokenizeRawTweetText(clean_text)
 
     # Remove stop words
     # unigrams = [w for doc in documents for w in doc if len(w) == 1]
@@ -86,13 +87,21 @@ def twokenize(text):
 
     # lmtzr = WordNetLemmatizer()
     # tokens = [lmtzr.lemmatize(token) for token in tokens]
-
-    stemmer = SnowballStemmer("english")
-    # print tokens
-    tokens = [stemmer.stem(token) for token in tokens]
-
-    clean_text = ' '.join(set(tokens))
+    if stem:
+        stemmer = SnowballStemmer("english")
+        # print tokens
+        tokens = [stemmer.stem(token) for token in tokens]
+    if no_duplicates:
+        # tokens = set(tokens)
+        tokens = f7(tokens)
+    clean_text = ' '.join(tokens)
     return clean_text
+
+
+def f7(seq):
+    seen = set()
+    seen_add = seen.add
+    return [x for x in seq if not (x in seen or seen_add(x))]
 
 
 def test_tweet_preprocess(preprocess_function, tweet):
