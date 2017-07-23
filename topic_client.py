@@ -78,7 +78,7 @@ class TopicListener(StreamListener):
                     # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
                     # assert resp == '<Response [204]>'
 
-                    # twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
+                    twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
                     # twitter_client.retweet(status.id)
 
                     # store tweets that have been reported to ES
