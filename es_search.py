@@ -8,7 +8,7 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from mappings import *
-from tweet_preprocess import twokenize, stoplist
+from tweet_preprocess import twokenize, stoplist, f7
 from conceptualization import babelfy_query
 # from relevance_feedback import boosting_relevance
 
@@ -82,8 +82,10 @@ class ESClient():
         if results['max_score'] > threshold:
         # if results['hits']:
             topic = results['hits'][0]
-            title_terms = set(topic['_source']['title_terms'])
-            if title_terms.issubset(set(self.tokenize_in_es(query))):
+            title_terms = ' '.join(topic['_source']['title_terms'])
+            # print title_terms
+            # print query_str
+            if query.find(title_terms) > -1:
                 # print topic['_source']['title']
                 return topic
         return None
@@ -193,10 +195,9 @@ def test_search_all():
     es = ESClient(index=INDEX)
     # text = "Katy Perry and Taylor Swift feud" #u'_score': 56.553635
     # text = "best boyfriend eating ice cream" #u'_score': 56.553635
-    text = "best ice cream ever" #u'_score': 56.553635
-    # 28
+    # text = "best ice cream ever" #u'_score': 40.6
     # text = "The Iris Tank One Piece Swimsuit is a classic statement one piece, perfect for every beach girl. The features of... http://fb.me/1wXYqZnKy" #u'_score': 56.553635
-    # text = "One Piece anime" # 39 threshold = 29!!!
+    text = "One Piece anime" # 39 threshold = 29!!!
     # text = "side effect of the HPV vaccine" # u'_score': 48.15171
     # text = "term limit politicians" #42.087566
     # text = "Im ordering pizza at Panera Bread" #44.941032
@@ -207,13 +208,16 @@ def test_search_all():
     # 11.242464
     # text = '''uoiae ＠llililill  july 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly 23, 2017 at 06:25amjuly …'''
     # remove duplicates
-    text = twokenize(text)
+    # text = twokenize(text)
+    tokens = es.tokenize_in_es(text)
+    text = ' '.join(f7(tokens))
+    print text
     # text = ' '.join(set(text.split(' ')))
     # threshold = 40
     # tokens = text.split(" ")
     # clean_text = [token for token in tokens if token not in stoplist]
     # query = twokenize(text)
-    results = es.search_all(query=text, explain=True, threshold=29)
+    results = es.search_all(query=text, explain=True, threshold=26)
     print results
     # topic = results['hits']['hits'][0]
     # title_terms = set(topic['_source']['title_terms'])
