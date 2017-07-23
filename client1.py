@@ -6,7 +6,7 @@ Simple Twitter stream topic matcher via ElasticSearch
 '''
 
 from tweepy.streaming import StreamListener
-from tweepy import Stream, OAuthHandler
+from tweepy import Stream, API, OAuthHandler
 
 from elasticsearch import Elasticsearch
 
@@ -16,6 +16,7 @@ from settings import *
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
 auth_handler.set_access_token(OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
+twitter_client = API(auth_handler)
 
 # set up ES connection
 es = Elasticsearch()
@@ -57,6 +58,18 @@ def search_all(query, threshold=40, explain=False, index=INDEX):
     return None
 
 
+def search_duplicate_tweets(query, threshold=3, index=INDEX):
+    results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
+    if results['max_score'] > threshold:
+        return results['hits'][0]
+    return None
+
+
+def store_tweet(topic_id, tweet_text, index=INDEX):
+    es.index(index=index, doc_type='tweets', id=topic_id,
+             body={'tweet': tweet_text})
+
+
 def f7(seq):
     '''
     Remove duplicates from tweets preserving order
@@ -95,7 +108,7 @@ class TopicListener(StreamListener):
             results = search_all(query=query, threshold=19)
             if results:
                 # check duplicates
-                duplicates = es.search_tweets(query=query)
+                duplicates = search_duplicate_tweets(query=query)
                 if not duplicates:
                     # report tweet
                     print 'Tweet:', report
@@ -116,7 +129,7 @@ class TopicListener(StreamListener):
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
 
                     # store tweets that have been reported to ES
-                    es.store_tweet(topid, query)
+                    store_tweet(topid, query)
                     print '\n'
 
         return True
