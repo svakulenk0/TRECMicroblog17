@@ -26,8 +26,8 @@ SAMPLE_TWEETS = [
 # @dearanathema i am,, sorry
                 ]
 
-stoplist = set(nltk.corpus.stopwords.words("english") + STOPLIST_TW)
-
+STOPLIST = set(nltk.corpus.stopwords.words("english") + STOPLIST_TW)
+MYSTOPLIST = ['me', 'so', 'can', 'someone', 'rt', 'and', 'of', 'to', 'a', 'in', 'at', 'on', 'about', 'its', 'the', 'with', 'other', 'or', 'The', 'who', 'are', 'What', 'How', 'Looking', 'for', 'do', 'you', 'tweets', 'is', 'would', 'like', 'others', 'I', 'am', 'interested', 'Find', 'be', 'user', 'news', 'new']
 
 def regex_based(text):
 
@@ -53,7 +53,8 @@ def regex_based(text):
     return clean_text
 
 
-def twokenize(text, no_duplicates=True, stem=True):
+def twokenize(text, no_duplicates=True, stem=False):
+    text = text.lower()
     clean_text = re.sub(r"(?:\@|https?\://)\S+", "", text)
 
     # remove non alpha chars
@@ -79,7 +80,7 @@ def twokenize(text, no_duplicates=True, stem=True):
     # print bigrams
         # + STOPLIST_TW + STOPLIST + unigrams + bigrams)
     # and strip #
-    tokens = [token for token in tokens if token not in stoplist]
+    tokens = [token for token in tokens if token not in STOPLIST]
     # tokens = [token for token in tokens if token not in string.punctuation]
     # print tokens
     # remove punctuation tokens
@@ -111,4 +112,5 @@ def test_tweet_preprocess(preprocess_function, tweet):
 
 if __name__ == '__main__':
     # test_tweet_preprocess(regex_based)
-    test_tweet_preprocess(twokenize, tweet='''we just ordered pizza at panera bread?''')
+    # test_tweet_preprocess(twokenize, tweet='''we just ordered pizza at panera bread?''')
+    print STOPLIST
