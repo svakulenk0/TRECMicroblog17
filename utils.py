@@ -9,6 +9,12 @@ from tweepy import API, OAuthHandler
 from settings import *
 
 
+def load_titles(file=TOPICS):
+    with open(file, "r") as f:
+        topics_json = json.load(f)
+        return [topic['title'] for topic in topics_json]
+
+
 def load_topics(file=TOPICS):
     with open(file, "r") as f:
         topics_json = json.load(f)
@@ -34,4 +40,4 @@ def clean_up_my_timeline(ntweets=100):
 
 
 if __name__ == '__main__':
-    load_topics()
+    load_titles()
