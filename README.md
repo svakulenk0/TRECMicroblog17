@@ -2,6 +2,8 @@
 
 Evaluation will take place from July 25 00:00:00 UTC to August 3 23:59:59 UTC
 
+188 topics provided by the organizers in JSON format. A sample topic contains title, description and narrative fields.
+
 Scenario A. Push notifications should be:
 
 * relevant (on topic) -- tweet-query similarity ranking
@@ -15,6 +17,10 @@ Scenario A. Push notifications should be:
 * nltk: nltk.download() -> stopwords
 
 ## Usage
+
+* Populate ES index with topics dumped in JSON file
+
+load_topics_from_file()
 
 * Monitor Twitter stream for TREC topics:
 topic_client.py
