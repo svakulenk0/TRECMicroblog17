@@ -6,28 +6,16 @@ svakulenko
 
 import re
 
-from conceptualization import get_concepts_from_lotus
+from conceptualization import lotus_recursive_call
 from tweet_preprocess import twokenize, MYSTOPLIST
+from sample_tweets import TRUE, FALSE
 
 
 # sample tweets
 true = "logging PowerShell defenders attackers"
 false = "Security Cameras Surveillance Systems"
-# real = "Someone give me 2 tickets to the justin bieber concert in Arlington,Tx so me and my mom can go"
-real = "The Iris Tank One Piece Swimsuit is a classic statement one piece, perfect for every beach girl. The features of... http://fb.me/1wXYqZnKy"
-
-
-def lotus_recursive_call(original, found=None):
-    '''
-    '''
-    concepts, found = get_concepts_from_lotus(original)
-    print found
-    print concepts
-    
-    if concepts:
-        leftover = original.replace(found,"").strip()
-        if leftover:
-            lotus_recursive_call(leftover, found)
+sample = "Im ordering pizza at Panera Bread"
+real = "••Great Full Time Benefits at General Security Services Corporation!•• http://JobGuideND.com "
 
 
 def close_segment(current_segment, segments):
@@ -45,6 +33,9 @@ def segment_on_stopwords(text, stopwords=MYSTOPLIST):
 
     # remove urls
     text = re.sub(r"(?:\@|https?\://)\S+", " ", text)
+
+    # remove symbols #
+    text = re.sub(r"(#)", "", text)
 
     # lowercase to detect all stopwords
     text = text.lower()
@@ -89,7 +80,7 @@ def test_process_string(tweets=[true, false]):
         print '\n'
 
 
-def test_process_tokens(tweets=[real], tokenize=segment_on_stopwords):
+def test_process_tokens(tweets=TRUE+FALSE, tokenize=segment_on_stopwords):
     # iterate over tweets
     for tweet in tweets:
         print tweet
@@ -101,6 +92,19 @@ def test_process_tokens(tweets=[real], tokenize=segment_on_stopwords):
         print '\n'
 
 
+def test_tweet_lookup(tweet=true, tokenize=segment_on_stopwords):
+    print tweet
+    tokens = tokenize(tweet)
+    # print tokens
+
+    for token in tokens:
+        # print token
+        token_concepts = lotus_recursive_call(token)
+        print token_concepts
+
+
 if __name__ == '__main__':
-    test_tokenize()
+    # test_tokenize()
     # test_process_string()
+    # test_process_tokens()
+    test_tweet_lookup()
