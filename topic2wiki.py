@@ -46,25 +46,40 @@ def get_wiki_pages(string, maxpages=1):
     wiki_page_titles = find_in_wiki(string)[:maxpages]
     
     for page_title in wiki_page_titles:
+        return get_wiki_page(page_title)
+
+
+def get_wiki_page(page_title):
+    try:
         page = wikipedia.page(page_title)
 
         title = page.title
         summary = page.summary
         content = page.content
         # preprocess wiki content
-        return title, summary, content
+    except wikipedia.exceptions.DisambiguationError as e:
+        option1 = e.options[0]
+        title, summary, content = get_wiki_page(option1)
         # print page.links
+    return title, summary, content
 
 
-def test_get_wiki_pages(file=TOPICS, maxtopics=1):
+def test_get_wiki_pages():
+    title = 'The Hypnotist'
+    wiki = get_wiki_pages(title)
+    print wiki[0]
+
+
+def test_topic2wiki(file=TOPICS, maxtopics=1):
     # iterate over topics
     with open(file, "r") as f:
         topics_json = json.load(f)
         for topic in topics_json[:maxtopics]:
             
-            title = topic['title']
-            print title
-            wiki = get_wiki_pages(title)
+            # title = topic['title']
+            description = topic['description']
+            print description
+            wiki = get_wiki_pages(description)
             print wiki
 
 
