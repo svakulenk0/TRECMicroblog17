@@ -16,6 +16,7 @@ Scenario A. Push notifications should be:
 * elasticsearch
 * nltk: nltk.download() -> stopwords
 * rdflib
+* wikipedia
 
 ## Usage
 
