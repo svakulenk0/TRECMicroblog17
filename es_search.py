@@ -8,7 +8,8 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from mappings import *
-from tweet_preprocess import twokenize, stoplist, f7
+from tweet_preprocess import twokenize, f7
+from client0 import tokenize_in_es
 from conceptualization import babelfy_query
 # from relevance_feedback import boosting_relevance
 
@@ -343,20 +344,28 @@ def load_topics_from_file(i=0):
 def test_duplicate_detection():
     # TODO ??
     tweet1 = 'a on bodyhttps://t.co/ot7mw1gunz show of de GiannaNicolston france photos tour race effects human shocking the cyclist’s'
-    tweet2 = 'a on Julia_Harris99 show of de france photos tour race effects human bodyhttps://t.co/zsdilwi8uh shocking the cyclist’s'
+    tweet2 = 'show of de france photos tour race effects human bodyhttps://t.co/zsdilwi8uh shocking the cyclist’s'
 
     # preprocess tweets
     # tweet1 = twokenize(tweet1)
     # tweet2 = twokenize(tweet2)
 
+    # preprocess tweet
+    tweet1 = tokenize_in_es(tweet1)
+    tweet1 = ' '.join(f7(tweet1))
+
+    # preprocess tweet
+    tweet2 = tokenize_in_es(tweet2)
+    tweet2 = ' '.join(f7(tweet2))
+
     print tweet1
     print tweet2
 
-    es = ESClient(index='trec17')
+    es = ESClient(index='client0')
     # store tweet in ES
     es.store_tweet('test22', tweet1)
     # check duplicates
-    duplicates = es.search_tweets(query=tweet2)
+    duplicates = es.search_tweets(query=tweet2, threshold=13)
     print duplicates
     assert duplicates
     if duplicates:
@@ -366,4 +375,5 @@ def test_duplicate_detection():
 if __name__ == '__main__':
     # reset: reload topics to ES
     # load_topics_from_file()
-    test_search_all()
+    # test_search_all()
+    test_duplicate_detection()
