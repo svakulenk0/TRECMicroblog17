@@ -14,7 +14,9 @@ from settings import *
 from sample_tweets import TRUE, FALSE
 
 # 85 76
-THRESHOLD = 85
+THRESHOLD = 80
+
+INDEX = 'client0'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -76,7 +78,7 @@ def test_search_all():
         # print results
 
 
-def search_duplicate_tweets(query, threshold=3, index=INDEX):
+def search_duplicate_tweets(query, threshold=13, index=INDEX):
     results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
     if results['max_score'] > threshold:
         return results['hits'][0]
@@ -144,7 +146,6 @@ class TopicListener(StreamListener):
                     resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
                     print resp
                     # assert resp == '<Response [204]>'
-
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
 
                     # store tweets that have been reported to ES
