@@ -2,8 +2,10 @@
 23 July 2017
 svakulenko
 
-Simple Twitter stream topic matcher via ElasticSearch
+Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
 '''
+import requests
+import re
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream, API, OAuthHandler
@@ -11,7 +13,12 @@ from tweepy import Stream, API, OAuthHandler
 from elasticsearch import Elasticsearch
 
 from settings import *
+from sample_tweets import TRUE, FALSE
 
+# 85 80 76
+THRESHOLD = 85
+
+INDEX = 'client1'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -26,7 +33,7 @@ multi = {
             "query": {
                 "multi_match" : {
                     "type": "most_fields",
-                    "fields": ["title", 'description', 'narrative']
+                    "fields": ["title", 'description', 'narrative', 'wiki_title', 'wiki_summary', 'wiki_content']
                 }
             }
         }
@@ -40,7 +47,7 @@ def tokenize_in_es(text, index=INDEX):
     return [token['token'] for token in tokens['tokens']]
 
 
-def search_all(query, threshold=40, explain=False, index=INDEX):
+def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     '''
     Search tweet through topics in ES index
     '''
@@ -50,15 +57,32 @@ def search_all(query, threshold=40, explain=False, index=INDEX):
     results = es.search(index=index, body=request, doc_type='topics', explain=explain)['hits']
     # filter out the scores below the specified threshold
     if results['max_score'] > threshold:
-        # topic title terms have to be subset of the tweet
         topic = results['hits'][0]
-        title_terms = ' '.join(topic['_source']['title_terms'])
-        if query.find(title_terms) > -1:
+        # topic title terms have to be subset of the tweet
+        title_terms = set(topic['_source']['title_terms'])
+        if title_terms.issubset(set(tokenize_in_es(query, index))):
             return topic
     return None
 
 
-def search_duplicate_tweets(query, threshold=3, index=INDEX):
+def test_search_all():
+    for tweet in TRUE+FALSE:
+        
+        # preprocess tweet
+        # remove urls
+        tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
+        tokens = tokenize_in_es(tweet)
+        query = ' '.join(f7(tokens))
+        print query
+
+        # query = "justin bieber will have a concert next tuesday"
+        results = search_all(query, threshold=0, explain=True, index=INDEX)
+        if results:
+            print results['_score']
+        # print results
+
+
+def search_duplicate_tweets(query, threshold=13, index=INDEX):
     results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
     if results['max_score'] > threshold:
         return results['hits'][0]
@@ -101,11 +125,13 @@ class TopicListener(StreamListener):
                 report += '\nMEDIA'
 
             # preprocess tweet
+            # remove urls
+            text = re.sub(r"(?:\@|https?\://)\S+", "", text)
             tokens = tokenize_in_es(text)
             query = ' '.join(f7(tokens))
 
             # query elastic search
-            results = search_all(query=query, threshold=19)
+            results = search_all(query=query, threshold=THRESHOLD)
             if results:
                 # check duplicates
                 duplicates = search_duplicate_tweets(query=query)
@@ -123,7 +149,8 @@ class TopicListener(StreamListener):
                     topid = results['_id']
 
                     # send push notification
-                    # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
+                    resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[1])))
+                    print resp
                     # assert resp == '<Response [204]>'
 
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
@@ -158,4 +185,5 @@ def stream_tweets():
 
 
 if __name__ == '__main__':
+    # test_search_all()
     stream_tweets()

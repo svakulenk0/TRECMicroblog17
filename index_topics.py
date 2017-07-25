@@ -80,7 +80,7 @@ def make_documents_with_wiki(f, index_name, limit=10):
 
 # load topics into ES index in bulk
 def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents):
-    es.indices.delete(index=index_name)
+    # es.indices.delete(index=index_name)
     es.indices.create(index=index_name, body=create_index_body)
 
     with open(file, "r") as f:
@@ -88,4 +88,4 @@ def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents
 
 
 if __name__ == '__main__':
-    load_topics_in_ES(document_processor=make_documents_with_wiki, index_name='client0')
+    load_topics_in_ES(document_processor=make_documents_with_wiki, index_name='client1')
