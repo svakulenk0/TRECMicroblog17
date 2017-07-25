@@ -13,8 +13,8 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 
-# 85
-THRESHOLD = 76
+# 85 76
+THRESHOLD = 85
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
