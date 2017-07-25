@@ -4,6 +4,7 @@ svakulenko
 
 Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
 '''
+import requests
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream, API, OAuthHandler
