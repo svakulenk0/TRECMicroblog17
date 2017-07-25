@@ -69,7 +69,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
             return None
 
 
-def get_concepts_from_lotus(text, found_concepts=[], match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
+def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
     '''
     recursive call to the API
     returns a list of concept URIs from LOTUS API
@@ -96,11 +96,9 @@ def get_concepts_from_lotus(text, found_concepts=[], match='terms', rank='length
             # 1st part remove last word
             text = " ".join(tokens[:-1])
             # print text
-            concepts, text = get_concepts_from_lotus(text, found_concepts)
-        else:
-            found_concepts.append(concepts)
+            concepts, text = get_concepts_from_lotus(text)
         
-        return found_concepts, text
+        return concepts, text
     except:
         return None, None
 
