@@ -15,6 +15,7 @@ Scenario A. Push notifications should be:
 * tweepy
 * elasticsearch
 * nltk: nltk.download() -> stopwords
+* rdflib
 
 ## Usage
 
