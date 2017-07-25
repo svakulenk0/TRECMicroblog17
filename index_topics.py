@@ -12,6 +12,7 @@ from elasticsearch.helpers import bulk
 
 from settings import *
 from mappings import *
+from topic2wiki import get_wiki_pages
 
 
 es = Elasticsearch()
@@ -22,7 +23,6 @@ def tokenize_in_es(text, index_name=INDEX):
     return [token['token'] for token in tokens['tokens']]
 
 
- # json-ize the lines in the file
 def make_documents(f, index_name):
     topics_json = json.load(f)
     for topic in topics_json:
@@ -38,23 +38,48 @@ def make_documents(f, index_name):
                 '_source': {'title': title,
                             'title_terms': title_terms,
                             'description': topic['description'],
-                            'description': topic['description'],
                             'narrative': topic['narrative'],
                             }
         }
         yield( doc )
-        
 
+
+def make_documents_with_wiki(f, index_name, limit=10):
+    topics_json = json.load(f)
+    for topic in topics_json[:limit]:
+
+        topic_title = topic['title']
+        print topic_title
+        title_terms = tokenize_in_es(topic_title)
+
+        wiki_title, wiki_summary, wiki_content = get_wiki_pages(topic_title)
+        print wiki_title
+
+        doc = {
+                '_op_type': 'index',
+                '_index': INDEX,
+                '_type': 'topics',
+                '_id': topic['topid'],
+                '_source': {'title': topic_title,
+                            'title_terms': title_terms,
+                            'description': topic['description'],
+                            'narrative': topic['narrative'],
+                            'wiki_title': wiki_title,
+                            'wiki_summary': wiki_summary,
+                            'wiki_content': wiki_content,
+                            }
+        }
+        yield( doc )
 
 
 # load topics into ES index in bulk
-def load_topics_in_ES(file=TOPICS, index_name=INDEX):
-    # es.indices.delete(index=index_name)
+def load_topics_in_ES(file=TOPICS, index_name=INDEX, document_processor=make_documents):
+    es.indices.delete(index=index_name)
     es.indices.create(index=index_name, body=create_index_body)
 
     with open(file, "r") as f:
-        bulk(es, make_documents(f, index_name))
+        bulk(es, document_processor(f, index_name))
 
 
 if __name__ == '__main__':
-    load_topics_in_ES()
+    load_topics_in_ES(document_processor=make_documents_with_wiki)
