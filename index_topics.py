@@ -46,7 +46,7 @@ def make_documents(f, index_name):
 
 def make_documents_with_wiki(f, index_name, limit=10):
     topics_json = json.load(f)
-    for topic in topics_json[:limit]:
+    for topic in topics_json:
 
         topic_title = topic['title']
         print topic_title
