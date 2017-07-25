@@ -69,6 +69,21 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
             return None
 
 
+def loop_concept_expansion(concept_uris, visited=[], nhops=2):
+    if len(visited) > nhops:
+        return
+    for concept in concept_uris:
+        if concept not in visited:
+            nns = lookup_nns(concept)
+            visited.append(concept)
+            if nns:
+                print concept
+                print nns
+                print '\n'
+                # recursion
+                loop_concept_expansion(nns, visited)
+
+
 def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
     '''
     recursive call to the API

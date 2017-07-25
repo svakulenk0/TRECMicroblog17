@@ -6,7 +6,7 @@ svakulenko
 
 import re
 
-from conceptualization import lotus_recursive_call, lookup_nns
+from conceptualization import lotus_recursive_call, lookup_nns, loop_concept_expansion
 from tweet_preprocess import twokenize, MYSTOPLIST
 from sample_tweets import TRUE, FALSE
 
@@ -132,8 +132,15 @@ def test_tweet_concept_expansion(tweet=true):
                         print nns
 
 
+def test_loop_tweet_concept_expansion(tweet=true):
+    tweet_concepts = tweet_lookup(tweet)
+    for token in tweet_concepts:
+        print token
+        loop_concept_expansion(token)
+
+
 if __name__ == '__main__':
     # test_tokenize()
     # test_process_string()
     # test_process_tokens()
-    test_tweet_concept_expansion()
+    test_loop_tweet_concept_expansion()
