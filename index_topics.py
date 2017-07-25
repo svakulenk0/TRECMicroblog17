@@ -52,8 +52,8 @@ def make_documents_with_wiki(f, index_name, limit=10):
         print topic_title
         title_terms = tokenize_in_es(topic_title)
 
-        wiki_title, wiki_summary, wiki_content = get_wiki_pages(topic_title)
-        print wiki_title
+        topic_description = topic['description']
+        # print topic_description
 
         doc = {
                 '_op_type': 'index',
@@ -63,12 +63,18 @@ def make_documents_with_wiki(f, index_name, limit=10):
                 '_source': {'title': topic_title,
                             'title_terms': title_terms,
                             'description': topic['description'],
-                            'narrative': topic['narrative'],
-                            'wiki_title': wiki_title,
-                            'wiki_summary': wiki_summary,
-                            'wiki_content': wiki_content,
+                            'narrative': topic['narrative']
                             }
-        }
+              }
+        # query expansion with Wikipedia articles
+        wiki = get_wiki_pages(topic_title)
+        if wiki:
+            wiki_title, wiki_summary, wiki_content = wiki
+            print wiki_title
+            doc['_source']['wiki_title'] = wiki_title
+            doc['_source']['wiki_summary'] = wiki_summary
+            doc['_source']['wiki_content'] = wiki_content
+
         yield( doc )
 
 
