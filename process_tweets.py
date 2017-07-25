@@ -6,7 +6,7 @@ svakulenko
 
 import re
 
-from conceptualization import lotus_recursive_call
+from conceptualization import lotus_recursive_call, lookup_nns
 from tweet_preprocess import twokenize, MYSTOPLIST
 from sample_tweets import TRUE, FALSE
 
@@ -92,7 +92,7 @@ def test_process_tokens(tweets=TRUE+FALSE, tokenize=segment_on_stopwords):
         print '\n'
 
 
-def tweet_lookup(tweet, tokenize):
+def tweet_lookup(tweet, tokenize=segment_on_stopwords):
     print tweet
     tokens = tokenize(tweet)
     # print tokens
@@ -113,8 +113,27 @@ def test_tweet_lookup(tweet=false, tokenize=segment_on_stopwords):
     print tweet_concepts
 
 
+def test_tweet_concept_expansion(tweet=true):
+    tweet_concepts = tweet_lookup(tweet)
+    for token in tweet_concepts:
+        
+        # 1s hop
+        for alternative in token:
+            nns = lookup_nns(alternative)
+            if nns:
+                print alternative
+                print nns
+                
+                # 2nd hop
+                for alternative in nns:
+                    nns = lookup_nns(alternative)
+                    if nns:
+                        print alternative
+                        print nns
+
+
 if __name__ == '__main__':
     # test_tokenize()
     # test_process_string()
     # test_process_tokens()
-    test_tweet_lookup()
+    test_tweet_concept_expansion()
