@@ -51,7 +51,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
         concepts, found_text = get_concepts_from_lotus(original, size=2)
         
         if found_text:
-            # print found_text
+            print found_text
             # print concepts
             found_texts.append(found_text)
             found_concepts.append(concepts)

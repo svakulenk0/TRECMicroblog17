@@ -13,7 +13,7 @@ from sample_tweets import TRUE, FALSE
 
 # sample tweets
 true = "logging PowerShell defenders attackers"
-false = "Security Cameras Surveillance Systems"
+false = "Security Cameras and Surveillance Systems"
 sample = "Im ordering pizza at Panera Bread"
 real = "••Great Full Time Benefits at General Security Services Corporation!•• http://JobGuideND.com "
 
@@ -92,15 +92,25 @@ def test_process_tokens(tweets=TRUE+FALSE, tokenize=segment_on_stopwords):
         print '\n'
 
 
-def test_tweet_lookup(tweet=true, tokenize=segment_on_stopwords):
+def tweet_lookup(tweet, tokenize):
     print tweet
     tokens = tokenize(tweet)
     # print tokens
 
+    concepts = []
+
     for token in tokens:
         # print token
         token_concepts = lotus_recursive_call(token)
-        print token_concepts
+    return token_concepts
+        # concepts.append(token_concepts)
+
+    # return concepts
+
+
+def test_tweet_lookup(tweet=false, tokenize=segment_on_stopwords):
+    tweet_concepts = tweet_lookup(tweet, tokenize)
+    print tweet_concepts
 
 
 if __name__ == '__main__':
