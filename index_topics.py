@@ -18,7 +18,7 @@ from topic2wiki import get_wiki_pages
 es = Elasticsearch()
 
 
-def tokenize_in_es(text, index_name=INDEX):
+def tokenize_in_es(text, index_name):
     tokens = es.indices.analyze(index=index_name, analyzer='english', text=text)
     return [token['token'] for token in tokens['tokens']]
 
@@ -28,7 +28,7 @@ def make_documents(f, index_name):
     for topic in topics_json:
 
         title = topic['title']
-        title_terms = tokenize_in_es(title)
+        title_terms = tokenize_in_es(title, index_name)
 
         doc = {
                 '_op_type': 'index',
@@ -50,14 +50,14 @@ def make_documents_with_wiki(f, index_name, limit=10):
 
         topic_title = topic['title']
         print topic_title
-        title_terms = tokenize_in_es(topic_title)
+        title_terms = tokenize_in_es(topic_title, index_name)
 
         topic_description = topic['description']
         # print topic_description
 
         doc = {
                 '_op_type': 'index',
-                '_index': INDEX,
+                '_index': index_name,
                 '_type': 'topics',
                 '_id': topic['topid'],
                 '_source': {'title': topic_title,
@@ -79,7 +79,7 @@ def make_documents_with_wiki(f, index_name, limit=10):
 
 
 # load topics into ES index in bulk
-def load_topics_in_ES(file=TOPICS, index_name=INDEX, document_processor=make_documents):
+def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents):
     es.indices.delete(index=index_name)
     es.indices.create(index=index_name, body=create_index_body)
 
@@ -88,4 +88,4 @@ def load_topics_in_ES(file=TOPICS, index_name=INDEX, document_processor=make_doc
 
 
 if __name__ == '__main__':
-    load_topics_in_ES(document_processor=make_documents_with_wiki)
+    load_topics_in_ES(document_processor=make_documents_with_wiki, index_name='client0')
