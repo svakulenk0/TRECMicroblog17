@@ -51,7 +51,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
         concepts, found_text = get_concepts_from_lotus(original, size=2)
         
         if found_text:
-            print found_text
+            # print found_text
             # print concepts
             found_texts.append(found_text)
             found_concepts.append(concepts)
@@ -107,8 +107,9 @@ def lookup(concept_uri, position='subject'):
     # call ldf
     resp = requests.get(LODALOT_API % (position, concept_uri))
     # print resp.content
-    triples = resp.text.split('\n')[2:]
-    return triples
+    if resp.status_code == requests.codes.ok:
+        triples = resp.text.split('\n')[2:]
+        return triples
 
 
 def lookup_nns(concept_uri, position='subject'):
@@ -116,19 +117,23 @@ def lookup_nns(concept_uri, position='subject'):
     lookup nearest neighbours in LOD-a-lot
     '''
     nns_rdf = lookup(concept_uri, position)
-    # print nns_rdf
+    if nns_rdf:
+        # print nns_rdf
 
-    g = rdflib.Graph()
+        g = rdflib.Graph()
 
-    for triple in nns_rdf:
-        g.parse(data=triple, format='ntriples')
+        for triple in nns_rdf:
+            try:
+                g.parse(data=triple, format='ntriples')
+            except:
+                print triple
 
-    nns = set()
-    for s, p, o in g:
-        if type(o) == rdflib.term.URIRef:
-            nns.add(str(o))
+        nns = set()
+        for s, p, o in g:
+            if type(o) == rdflib.term.URIRef:
+                nns.add(str(o))
 
-    return list(nns)
+        return list(nns)
 
 
 def test_get_concepts():
