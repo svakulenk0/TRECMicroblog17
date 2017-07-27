@@ -6,10 +6,12 @@ svakulenko
 '''
 import json
 import wikipedia
+import re
 
-from process_tweets import segment_on_stopwords
+# from process_tweets import segment_on_stopwords
 from conceptualization import lotus_recursive_call
 from settings import *
+# from tweet_preprocess import MYSTOPLIST
 
 
 TOPIC = {
@@ -20,12 +22,12 @@ TOPIC = {
         }
 
 
-def get_topic_concepts(topic=TOPIC, tokenize=segment_on_stopwords):
-    title = topic['title']
-    print title
+# def get_topic_concepts(topic=TOPIC, tokenize=segment_on_stopwords):
+#     title = topic['title']
+#     print (title)
     
-    topic_concepts = lotus_recursive_call(title, filter_ns=False, size=1)
-    print topic_concepts
+#     topic_concepts = lotus_recursive_call(title, filter_ns=False, size=1)
+#     print (topic_concepts)
 
 
 def find_in_wiki(string):
@@ -34,8 +36,8 @@ def find_in_wiki(string):
 
 def test_find_in_wiki(topic=TOPIC):
     title = topic['title']
-    print title
-    print find_in_wiki(title)[0]
+    print (title)
+    print (find_in_wiki(title)[0])
 
 
 def wiki_preprocess(content):
@@ -67,21 +69,31 @@ def get_wiki_page(page_title):
 def test_get_wiki_pages():
     title = 'The Hypnotist'
     wiki = get_wiki_pages(title)
-    print wiki[0]
+    print (wiki[0])
 
 
-def test_topic2wiki(file=TOPICS, maxtopics=1):
+def test_topic2wiki(file=TOPICS, maxtopics=5):
     # iterate over topics
     with open(file, "r") as f:
         topics_json = json.load(f)
-        for topic in topics_json[:maxtopics]:
+        for topic in topics_json:
             
-            # title = topic['title']
+            title = topic['title']
+            print (title)
+
             description = topic['description']
-            print description
+            # print description
+            # remove punctuation
+            description = re.sub('[,."?\-:;()\']', '', description).lower()
+            # remove stopwords
+            tokens = description.split(" ")
+            # description = " ".join([token for token in tokens if token not in MYSTOPLIST])
+            print (description)
+            
             wiki = get_wiki_pages(description)
-            print wiki
+            # print wiki[0]
+            # print '\n'
 
 
 if __name__ == '__main__':
-    test_get_wiki_pages()
+    test_topic2wiki()

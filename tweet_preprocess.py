@@ -27,7 +27,7 @@ SAMPLE_TWEETS = [
                 ]
 
 STOPLIST = set(nltk.corpus.stopwords.words("english") + STOPLIST_TW)
-MYSTOPLIST = ['me', 'so', 'can', 'someone', 'rt', 'and', 'of', 'to', 'a', 'in', 'at', 'on', 'about', 'its', 'the', 'with', 'other', 'or', 'The', 'who', 'are', 'What', 'How', 'Looking', 'for', 'do', 'you', 'tweets', 'is', 'would', 'like', 'others', 'I', 'am', 'interested', 'Find', 'be', 'user', 'news', 'new']
+MYSTOPLIST = ['one', 'where', 'see', 'buy', 'options', 'regarding', 'n', 'also', 'have', 'their','that', 'just', 'this', 'out', 'which', 'every', 'me', 'so', 'can', 'someone', 'rt', 'and', 'of', 'to', 'a', 'in', 'at', 'on', 'about', 'its', 'the', 'with', 'other', 'or', 'who', 'are', 'what', 'how', 'looking', 'for', 'do', 'you', 'tweets', 'is', 'would', 'like', 'others', 'i', 'am', 'interested', 'find', 'be', 'user', 'news', 'new']
 
 def regex_based(text):
 
@@ -107,10 +107,10 @@ def f7(seq):
 
 def test_tweet_preprocess(preprocess_function, tweet):
     # for tweet in SAMPLE_TWEETS:
-    print preprocess_function(tweet)
+    print (preprocess_function(tweet))
 
 
 if __name__ == '__main__':
     # test_tweet_preprocess(regex_based)
     # test_tweet_preprocess(twokenize, tweet='''we just ordered pizza at panera bread?''')
-    print STOPLIST
+    print (STOPLIST)

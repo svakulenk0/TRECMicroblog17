@@ -7,7 +7,7 @@ import requests
 import json
 import rdflib
 
-from tweet_preprocess import *
+# from tweet_preprocess import *
 from settings import BABELFY_KEY
 
 # filter out only dbpedia concepts by labels &subject=*dbpedia*
@@ -27,7 +27,6 @@ def load_sample_terms():
 
 
 def babelfy_query(text, lang='EN', match='EXACT_MATCHING', candidates='TOP'):
-    service_url = 'https://babelfy.io/v1/disambiguate'
     params = {
         'text': text,
         'lang': lang,
@@ -37,22 +36,23 @@ def babelfy_query(text, lang='EN', match='EXACT_MATCHING', candidates='TOP'):
         'key': BABELFY_KEY,
         'dens': 'true'
     }
-    resp = requests.post(service_url, data=params)
-    print resp.json()
+    resp = requests.post(BABELFY_API, data=params)
+    # print resp.json()
     return [hit['DBpediaURL'] for hit in resp.json()]
 
 
-def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
+def lotus_recursive_call(original, found_texts=[], found_concepts=[], size=10, filter_ns=False, verbose=False):
     '''
     '''
     # avoid calling the API several times for the same term
     if original not in found_texts:
         # print original
-        concepts, found_text = get_concepts_from_lotus(original, size=2)
+        concepts, found_text = get_concepts_from_lotus(original, size=size, filter_ns=filter_ns)
         
         if found_text:
-            # print found_text
-            # print concepts
+            if verbose:
+                print (found_text)
+                print (concepts)
             found_texts.append(found_text)
             found_concepts.append(concepts)
             # process the rest of the string
@@ -61,7 +61,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
             # skip the 1st word
             leftover = " ".join(original.split(" ")[1:])
         if leftover:
-            lotus_recursive_call(leftover, found_texts, found_concepts)
+            lotus_recursive_call(leftover, found_texts, found_concepts, filter_ns=filter_ns)
         
         if found_concepts:
             return found_concepts
@@ -69,19 +69,21 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[]):
             return None
 
 
-def loop_concept_expansion(concept_uris, visited=[], nhops=2):
-    if len(visited) > nhops:
-        return
-    for concept in concept_uris:
-        if concept not in visited:
-            nns = lookup_nns(concept)
-            visited.append(concept)
-            if nns:
-                print concept
-                print nns
-                print '\n'
-                # recursion
-                loop_concept_expansion(nns, visited)
+def loop_concept_expansion(concept_uris, visited=[], nhops=2, descriptions=[]):
+    if len(visited) < nhops:
+        for concept in concept_uris:
+            if concept not in visited:
+                nns, description = lookup_nns(concept)
+                if description:
+                    descriptions.append(description)
+                visited.append(concept)
+                if nns:
+                    # print concept
+                    # print nns
+                    # print '\n'
+                    # recursion
+                    loop_concept_expansion(nns, visited)
+    return (visited, descriptions)
 
 
 def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
@@ -111,7 +113,7 @@ def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filt
             # 1st part remove last word
             text = " ".join(tokens[:-1])
             # print text
-            concepts, text = get_concepts_from_lotus(text)
+            concepts, text = get_concepts_from_lotus(text, filter_ns=filter_ns)
         
         return concepts, text
     except:
@@ -130,6 +132,7 @@ def lookup(concept_uri, position='subject'):
 def lookup_nns(concept_uri, position='subject'):
     '''
     lookup nearest neighbours in LOD-a-lot
+    collect textual descriptions in English as well 
     '''
     nns_rdf = lookup(concept_uri, position)
     if nns_rdf:
@@ -141,14 +144,20 @@ def lookup_nns(concept_uri, position='subject'):
             try:
                 g.parse(data=triple, format='ntriples')
             except:
-                print triple
+                print (triple)
 
         nns = set()
+        descriptions = set()
         for s, p, o in g:
             if type(o) == rdflib.term.URIRef:
                 nns.add(str(o))
+            # collect English descriptions
+            elif type(o) == rdflib.term.Literal and o.language == 'en':
+                descriptions.add(str(o))
 
-        return list(nns)
+        return (list(nns), list(descriptions))
+
+    return None, None
 
 
 def test_get_concepts():
@@ -159,13 +168,13 @@ def test_get_concepts():
     # for term in SAMPLE_CONCEPTS:
     #     print term
 
-    # concepts = babelfy_query('HPV vaccine side effects')
+    concepts = babelfy_query("What injuries happened in this year's Tour de France?")
     # concepts = lotus_recursive_call('IT security')
     # for concept_uri in concepts:
     #     print concept_uri
     #     lookup(concept_uri)
 
-    print lookup('http://dbpedia.org/resource/IT_Security')
+    # print lookup('http://dbpedia.org/resource/IT_Security')
 
     # print get_concepts_from_lotus('HPV vaccine side effects')
 
