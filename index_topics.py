@@ -13,7 +13,7 @@ from elasticsearch.helpers import bulk
 from settings import *
 from mappings import *
 from topic2wiki import get_wiki_pages
-from search_google import search_google
+# from search_google import search_google
 from scrape_duckduckgo import get_relevant_article
 
 
@@ -80,10 +80,10 @@ def make_documents_expanded(f, index_name, limit=None, wiki=False, google=False,
                 doc['_source']['wiki_summary'] = wiki_summary
                 doc['_source']['wiki_content'] = wiki_content
 
-        if google:
-            google_result = search_google(topic_description)
-            if google_result:
-                doc['_source']['search_snippets'] = google_result
+        # if google:
+        #     google_result = search_google(topic_description)
+        #     if google_result:
+        #         doc['_source']['search_snippets'] = google_result
 
         if duckduck:
             duckduck_result = get_relevant_article(topic_description)
