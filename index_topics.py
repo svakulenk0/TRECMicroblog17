@@ -14,7 +14,7 @@ from settings import *
 from mappings import *
 from topic2wiki import get_wiki_pages
 # from search_google import search_google
-from scrape_duckduckgo import get_relevant_article
+# from scrape_duckduckgo import get_relevant_article
 
 
 es = Elasticsearch()
@@ -85,10 +85,10 @@ def make_documents_expanded(f, index_name, limit=None, wiki=False, google=False,
         #     if google_result:
         #         doc['_source']['search_snippets'] = google_result
 
-        if duckduck:
-            duckduck_result = get_relevant_article(topic_description)
-            if duckduck_result:
-                doc['_source']['web_page'] = duckduck_result
+        # if duckduck:
+        #     duckduck_result = get_relevant_article(topic_description)
+        #     if duckduck_result:
+        #         doc['_source']['web_page'] = duckduck_result
 
         yield( doc )
 
