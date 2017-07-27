@@ -85,7 +85,9 @@ create_index_body = {
             'narrative': {'type': 'text', 'analyzer': 'english'},
             'wiki_title': {'type': 'text', 'analyzer': 'english'},
             'wiki_summary': {'type': 'text', 'analyzer': 'english'},
-            'wiki_content': {'type': 'text', 'analyzer': 'english'}
+            'wiki_content': {'type': 'text', 'analyzer': 'english'},
+            'search_snippets': {'type': 'text', 'analyzer': 'english'},
+            'web_page': {'type': 'text', 'analyzer': 'english'}
           }
         },
         'tweets': {
