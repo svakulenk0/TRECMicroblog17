@@ -15,8 +15,8 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 
-# 85 80 76
-THRESHOLD = 85
+# 85
+THRESHOLD = 30
 
 INDEX = 'client1'
 
@@ -111,7 +111,7 @@ class TopicListener(StreamListener):
     def on_status(self, status):
         author = status.user.screen_name
         # ignore retweets
-        if not hasattr(status,'retweeted_status'):
+        if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
             text = status.text.replace('\n', '')
             text = ' '.join([author, text])
             report = text
