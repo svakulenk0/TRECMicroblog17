@@ -17,7 +17,7 @@ from settings import *
 from sample_tweets import TRUE, FALSE
 
 # 72
-THRESHOLD = 36
+THRESHOLD = 35
 
 INDEX = 'client0'
 
