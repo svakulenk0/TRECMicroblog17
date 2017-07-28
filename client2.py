@@ -95,11 +95,14 @@ def store_tweet(topic_id, tweet_text, index=INDEX):
 
 def f7(seq):
     '''
-    Remove duplicates from tweets preserving order
+    Order sequence to remove duplicates from tweets preserving order
     '''
-    seen = set()
-    seen_add = seen.add
-    return [x for x in seq if not (x in seen or seen_add(x))]
+    if len(seq) > 1:
+        seen = set()
+        seen_add = seen.add
+        return [x for x in seq if not (x in seen or seen_add(x))]
+    else:
+        return [seq]
 
 
 class TopicListener(StreamListener):
