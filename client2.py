@@ -14,8 +14,8 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
-# 61
-THRESHOLD = 45
+# 61 45
+THRESHOLD = 15
 
 INDEX = 'google'
 
@@ -56,6 +56,7 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     results = es.search(index=index, body=request, doc_type='topics', explain=explain)['hits']
     # filter out the scores below the specified threshold
     if results['max_score']:
+        print(results['max_score'])
         if results['max_score'] > threshold:
             topic = results['hits'][0]
             # topic title terms have to be subset of the tweet
@@ -155,8 +156,11 @@ class TopicListener(StreamListener):
                             topid = results['_id']
 
                             # send push notification
-                            resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
-                            print (resp)
+                            try:
+                                resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
+                                print (resp)
+                            except:
+                                print ("Could not push to TREC server")
                             # assert resp == '<Response [204]>'
 
                             twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
