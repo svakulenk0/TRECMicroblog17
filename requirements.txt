@@ -11,6 +11,7 @@ jieba3k==0.35.1
 lxml==3.8.0
 newspaper3k==0.2.2
 nltk==3.2.4
+oauthlib==2.0.2
 olefile==0.44
 Pillow==4.2.1
 pyparsing==2.2.0
@@ -19,7 +20,9 @@ PyYAML==3.12
 rdflib==4.2.2
 requests==2.18.2
 requests-file==1.4.2
+requests-oauthlib==0.8.0
 six==1.10.0
 tldextract==2.1.0
+tweepy==3.5.0
 urllib3==1.22
 wikipedia==1.4.0
