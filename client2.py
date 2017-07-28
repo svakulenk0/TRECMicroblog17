@@ -126,38 +126,39 @@ class TopicListener(StreamListener):
             # preprocess tweet
             # remove urls
             text = re.sub(r"(?:\@|https?\://)\S+", "", text)
-            tokens = tokenize_in_es(text)
-            if tokens:
-                query = ' '.join(f7(tokens))
+            if text:
+                tokens = tokenize_in_es(text)
+                if tokens:
+                    query = ' '.join(f7(tokens))
 
-                # query elastic search
-                results = search_all(query=query, threshold=THRESHOLD)
-                if results:
-                    # check duplicates
-                    duplicates = search_duplicate_tweets(query=query)
-                    if not duplicates:
-                        # report tweet
-                        print ('Tweet:', report)
-                        # sent to ES
-                        print ('Query:', query)
-                        print (results['_score'])
-                        title = results['_source']['title']
-                        print (title)
-                        print (results['_source']['description'])
-                        print (results['_source']['narrative'])
+                    # query elastic search
+                    results = search_all(query=query, threshold=THRESHOLD)
+                    if results:
+                        # check duplicates
+                        duplicates = search_duplicate_tweets(query=query)
+                        if not duplicates:
+                            # report tweet
+                            print ('Tweet:', report)
+                            # sent to ES
+                            print ('Query:', query)
+                            print (results['_score'])
+                            title = results['_source']['title']
+                            print (title)
+                            print (results['_source']['description'])
+                            print (results['_source']['narrative'])
 
-                        topid = results['_id']
+                            topid = results['_id']
 
-                        # send push notification
-                        # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
-                        # print resp
-                        # assert resp == '<Response [204]>'
+                            # send push notification
+                            # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
+                            # print resp
+                            # assert resp == '<Response [204]>'
 
-                        twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
+                            twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
 
-                        # store tweets that have been reported to ES
-                        store_tweet(topid, query)
-                        print ('\n')
+                            # store tweets that have been reported to ES
+                            store_tweet(topid, query)
+                            print ('\n')
 
         return True
 
