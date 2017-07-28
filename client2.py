@@ -132,6 +132,7 @@ class TopicListener(StreamListener):
             if text:
                 tokens = tokenize_in_es(text)
                 if tokens:
+                    print(tokens)
                     query = ' '.join(f7(tokens))
 
                     # query elastic search
