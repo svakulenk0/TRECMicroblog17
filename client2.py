@@ -15,7 +15,7 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 # 61 45
-THRESHOLD = 15
+THRESHOLD = 45
 
 INDEX = 'google'
 
@@ -56,7 +56,6 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     results = es.search(index=index, body=request, doc_type='topics', explain=explain)['hits']
     # filter out the scores below the specified threshold
     if results['max_score']:
-        print(results['max_score'])
         if results['max_score'] > threshold:
             topic = results['hits'][0]
             # topic title terms have to be subset of the tweet
@@ -85,8 +84,9 @@ def test_search_all():
 
 def search_duplicate_tweets(query, threshold=13, index=INDEX):
     results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
-    if results['max_score'] > threshold:
-        return results['hits'][0]
+    if results['max_score']:
+        if results['max_score'] > threshold:
+            return results['hits'][0]
     return None
 
 
@@ -164,7 +164,6 @@ class TopicListener(StreamListener):
                             # assert resp == '<Response [204]>'
 
                             twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
-
                             # store tweets that have been reported to ES
                             store_tweet(topid, query)
                             print ('\n')
