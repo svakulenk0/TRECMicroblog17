@@ -2,9 +2,10 @@
 23 July 2017
 svakulenko
 
-Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
+Twitter stream topic matcher via ElasticSearch only on 'description', 'narrative'
 '''
 import requests
+import re
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream, API, OAuthHandler
@@ -14,8 +15,8 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 
-# 85 76
-THRESHOLD = 80
+# 72
+THRESHOLD = 36
 
 INDEX = 'client0'
 
@@ -32,7 +33,7 @@ multi = {
             "query": {
                 "multi_match" : {
                     "type": "most_fields",
-                    "fields": ["title", 'description', 'narrative', 'wiki_title', 'wiki_summary', 'wiki_content']
+                    "fields": ['description', 'narrative']
                 }
             }
         }
@@ -58,8 +59,8 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     if results['max_score'] > threshold:
         topic = results['hits'][0]
         # topic title terms have to be subset of the tweet
-        # title_terms = ' '.join(topic['_source']['title_terms'])
-        # if query.find(title_terms) > -1:
+        # title_terms = set(topic['_source']['title_terms'])
+        # if title_terms.issubset(set(tokenize_in_es(query, index))):
         return topic
     return None
 
@@ -68,6 +69,8 @@ def test_search_all():
     for tweet in TRUE+FALSE:
         
         # preprocess tweet
+        # remove urls
+        tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
         tokens = tokenize_in_es(tweet)
         query = ' '.join(f7(tokens))
         print query
@@ -108,20 +111,22 @@ class TopicListener(StreamListener):
     def on_status(self, status):
         author = status.user.screen_name
         # ignore retweets
-        if not hasattr(status,'retweeted_status'):
+        if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
             text = status.text.replace('\n', '')
-            text = ' '.join([author, text])
+            # text = ' '.join([author, text])
             report = text
-            if status.entities[u'user_mentions']:
-                mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
-                report += '\nMentions: ' + mentions
-                text = ' '.join([text, mentions])
-            if status.entities[u'urls']:
-                report += '\nURL'
-            if [u'media'] in status.entities.keys():
-                report += '\nMEDIA'
+            # if status.entities[u'user_mentions']:
+            #     mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
+            #     report += '\nMentions: ' + mentions
+            #     text = ' '.join([text, mentions])
+            # if status.entities[u'urls']:
+            #     report += '\nURL'
+            # if [u'media'] in status.entities.keys():
+            #     report += '\nMEDIA'
 
             # preprocess tweet
+            # remove urls
+            text = re.sub(r"(?:\@|https?\://)\S+", "", text)
             tokens = tokenize_in_es(text)
             query = ' '.join(f7(tokens))
 
@@ -147,6 +152,7 @@ class TopicListener(StreamListener):
                     resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
                     print resp
                     # assert resp == '<Response [204]>'
+
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
 
                     # store tweets that have been reported to ES

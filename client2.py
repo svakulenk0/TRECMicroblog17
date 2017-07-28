@@ -2,8 +2,10 @@
 23 July 2017
 svakulenko
 
-Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
+Twitter stream topic matcher via ElasticSearch expanded with search snippets from Google Custom Search API
 '''
+import requests
+import re
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream, API, OAuthHandler
@@ -12,8 +14,10 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
+# 61 45
+THRESHOLD = 45
 
-THRESHOLD = 50
+INDEX = 'google'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -28,7 +32,7 @@ multi = {
             "query": {
                 "multi_match" : {
                     "type": "most_fields",
-                    "fields": ["title", 'description', 'narrative', 'wiki_summary', 'wiki_content']
+                    "fields": ['description', 'narrative', 'search_snippets']
                 }
             }
         }
@@ -51,12 +55,13 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     request['query']['multi_match']['query'] = query
     results = es.search(index=index, body=request, doc_type='topics', explain=explain)['hits']
     # filter out the scores below the specified threshold
-    if results['max_score'] > threshold:
-        topic = results['hits'][0]
-        # topic title terms have to be subset of the tweet
-        # title_terms = ' '.join(topic['_source']['title_terms'])
-        # if query.find(title_terms) > -1:
-        return topic
+    if results['max_score']:
+        if results['max_score'] > threshold:
+            topic = results['hits'][0]
+            # topic title terms have to be subset of the tweet
+            # title_terms = set(topic['_source']['title_terms'])
+            # if title_terms.issubset(set(tokenize_in_es(query, index))):
+            return topic
     return None
 
 
@@ -64,20 +69,24 @@ def test_search_all():
     for tweet in TRUE+FALSE:
         
         # preprocess tweet
+        # remove urls
+        tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
         tokens = tokenize_in_es(tweet)
         query = ' '.join(f7(tokens))
-        print query
+        print (query)
 
         # query = "justin bieber will have a concert next tuesday"
-        results = search_all(query, threshold=THRESHOLD, explain=True, index=INDEX)
-        print results['_score']
+        results = search_all(query, threshold=0, explain=True, index=INDEX)
+        if results:
+            print (results['_score'])
         # print results
 
 
-def search_duplicate_tweets(query, threshold=3, index=INDEX):
+def search_duplicate_tweets(query, threshold=13, index=INDEX):
     results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
-    if results['max_score'] > threshold:
-        return results['hits'][0]
+    if results['max_score']:
+        if results['max_score'] > threshold:
+            return results['hits'][0]
     return None
 
 
@@ -88,11 +97,14 @@ def store_tweet(topic_id, tweet_text, index=INDEX):
 
 def f7(seq):
     '''
-    Remove duplicates from tweets preserving order
+    Order sequence to remove duplicates from tweets preserving order
     '''
-    seen = set()
-    seen_add = seen.add
-    return [x for x in seq if not (x in seen or seen_add(x))]
+    if len(seq) > 1:
+        seen = set()
+        seen_add = seen.add
+        return [x for x in seq if not (x in seen or seen_add(x))]
+    else:
+        return seq
 
 
 class TopicListener(StreamListener):
@@ -103,56 +115,64 @@ class TopicListener(StreamListener):
     def on_status(self, status):
         author = status.user.screen_name
         # ignore retweets
-        if not hasattr(status,'retweeted_status'):
+        if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
             text = status.text.replace('\n', '')
-            text = ' '.join([author, text])
+            # text = ' '.join([author, text])
             report = text
-            if status.entities[u'user_mentions']:
-                mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
-                report += '\nMentions: ' + mentions
-                text = ' '.join([text, mentions])
-            if status.entities[u'urls']:
-                report += '\nURL'
-            if [u'media'] in status.entities.keys():
-                report += '\nMEDIA'
+            # if status.entities[u'user_mentions']:
+            #     mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
+            #     report += '\nMentions: ' + mentions
+            #     text = ' '.join([text, mentions])
+            # if status.entities[u'urls']:
+            #     report += '\nURL'
+            # if [u'media'] in status.entities.keys():
+            #     report += '\nMEDIA'
 
             # preprocess tweet
-            tokens = tokenize_in_es(text)
-            query = ' '.join(f7(tokens))
+            # remove urls
+            text = re.sub(r"(?:\@|https?\://)\S+", "", text)
+            if text:
+                tokens = tokenize_in_es(text)
+                if tokens:
+                    # print(tokens)
+                    query = ' '.join(f7(tokens))
+                    # print(query)
+                    # query elastic search
+                    results = search_all(query=query, threshold=THRESHOLD)
+                    if results:
+                        # check duplicates
+                        duplicates = search_duplicate_tweets(query=query)
+                        if not duplicates:
+                            # report tweet
+                            print ('Tweet:', report)
+                            # sent to ES
+                            print ('Query:', query)
+                            print (results['_score'])
+                            title = results['_source']['title']
+                            print (title)
+                            print (results['_source']['description'])
+                            print (results['_source']['narrative'])
 
-            # query elastic search
-            results = search_all(query=query, threshold=THRESHOLD)
-            if results:
-                # check duplicates
-                duplicates = search_duplicate_tweets(query=query)
-                if not duplicates:
-                    # report tweet
-                    print 'Tweet:', report
-                    # sent to ES
-                    print 'Query:', query
-                    print results['_score']
-                    title = results['_source']['title']
-                    print title
-                    print results['_source']['description']
-                    print results['_source']['narrative']
+                            topid = results['_id']
 
-                    topid = results['_id']
+                            # send push notification
+                            try:
+                                resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
+                                print (resp)
+                            except:
+                                print ("Could not push to TREC server")
+                            # assert resp == '<Response [204]>'
 
-                    # send push notification
-                    # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
-                    # assert resp == '<Response [204]>'
-
-                    twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
-
-                    # store tweets that have been reported to ES
-                    store_tweet(topid, query)
-                    print '\n'
+                            twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
+                            # store tweets that have been reported to ES
+                            store_tweet(topid, query)
+                            print ('\n')
 
         return True
 
 
     def on_error(self, status_code):
-      print status_code, 'error code'
+      print (status_code, 'error code')
 
 
 def stream_tweets():
@@ -165,11 +185,11 @@ def stream_tweets():
     while True:
         try:
             stream = Stream(auth_handler, listener)
-            print 'Listening...'
+            print ('Listening...')
             stream.sample(languages=['en'])
         except Exception as e:
             # reconnect on exceptions
-            print e
+            print (e)
             continue
 
 

@@ -46,7 +46,7 @@ def make_documents(f, index_name):
         yield( doc )
 
 
-def make_documents_expanded(f, index_name, limit=None, wiki=True, google=False, duckduck=True):
+def make_documents_expanded(f, index_name, limit=None, wiki=True, google=True, duckduck=True):
     topics_json = json.load(f)
     if limit:
         topics_json = topics_json[:limit]
@@ -95,7 +95,7 @@ def make_documents_expanded(f, index_name, limit=None, wiki=True, google=False, 
 
 # load topics into ES index in bulk
 def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents):
-    es.indices.delete(index=index_name)
+    # es.indices.delete(index=index_name)
     es.indices.create(index=index_name, body=create_index_body)
 
     with open(file, "r") as f:
@@ -103,4 +103,4 @@ def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents
 
 
 if __name__ == '__main__':
-    load_topics_in_ES(document_processor=make_documents_expanded, index_name='duckduck')
+    load_topics_in_ES(document_processor=make_documents_expanded, index_name='google')
