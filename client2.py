@@ -55,12 +55,13 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     request['query']['multi_match']['query'] = query
     results = es.search(index=index, body=request, doc_type='topics', explain=explain)['hits']
     # filter out the scores below the specified threshold
-    if results['max_score'] > threshold:
-        topic = results['hits'][0]
-        # topic title terms have to be subset of the tweet
-        # title_terms = set(topic['_source']['title_terms'])
-        # if title_terms.issubset(set(tokenize_in_es(query, index))):
-        return topic
+    if results['max_score']:
+        if results['max_score'] > threshold:
+            topic = results['hits'][0]
+            # topic title terms have to be subset of the tweet
+            # title_terms = set(topic['_source']['title_terms'])
+            # if title_terms.issubset(set(tokenize_in_es(query, index))):
+            return topic
     return None
 
 
@@ -137,6 +138,7 @@ class TopicListener(StreamListener):
                     print(query)
                     # query elastic search
                     results = search_all(query=query, threshold=THRESHOLD)
+                    print results
                     if results:
                         # check duplicates
                         duplicates = search_duplicate_tweets(query=query)
