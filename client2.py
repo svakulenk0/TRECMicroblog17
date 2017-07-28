@@ -14,8 +14,8 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
-
-THRESHOLD = 61
+# 61
+THRESHOLD = 45
 
 INDEX = 'google'
 
