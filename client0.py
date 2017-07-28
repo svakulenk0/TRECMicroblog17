@@ -3,6 +3,7 @@
 svakulenko
 
 Twitter stream topic matcher via ElasticSearch only on 'description', 'narrative'
+max score threshold
 '''
 import requests
 import re

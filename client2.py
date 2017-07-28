@@ -3,6 +3,7 @@
 svakulenko
 
 Twitter stream topic matcher via ElasticSearch expanded with search snippets from Google Custom Search API
+max score threshold
 '''
 import requests
 import re
@@ -143,7 +144,7 @@ class TopicListener(StreamListener):
                         # check duplicates
                         duplicates = search_duplicate_tweets(query=query)
                         if not duplicates:
-                            
+
                             # report tweet
                             print ('Tweet:', report)
                             # sent to ES

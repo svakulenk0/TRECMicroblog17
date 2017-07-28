@@ -3,6 +3,7 @@
 svakulenko
 
 Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
+max score threshold + title terms subset match
 '''
 import requests
 import re
@@ -16,9 +17,10 @@ from settings import *
 from sample_tweets import TRUE, FALSE
 
 # 85
-THRESHOLD = 30
+THRESHOLD = 36
 
 INDEX = 'client1'
+# INDEX = 'client2'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -33,7 +35,7 @@ multi = {
             "query": {
                 "multi_match" : {
                     "type": "most_fields",
-                    "fields": ["title", 'description', 'narrative', 'wiki_title', 'wiki_summary', 'wiki_content']
+                    "fields": ['description', 'narrative', 'wiki_title', 'wiki_summary', 'wiki_content']
                 }
             }
         }
