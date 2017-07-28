@@ -4,6 +4,7 @@ svakulenko
 
 Twitter stream topic matcher via ElasticSearch only on 'description', 'narrative'
 max score threshold
+TREC17 simple
 '''
 import requests
 import re
@@ -17,7 +18,7 @@ from settings import *
 from sample_tweets import TRUE, FALSE
 
 # 72
-THRESHOLD = 35
+THRESHOLD = 30
 
 INDEX = 'client0'
 

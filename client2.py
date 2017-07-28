@@ -4,6 +4,7 @@ svakulenko
 
 Twitter stream topic matcher via ElasticSearch expanded with search snippets from Google Custom Search API
 max score threshold
+Search Google snippets
 '''
 import requests
 import re

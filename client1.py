@@ -4,6 +4,7 @@ svakulenko
 
 Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
 max score threshold + title terms subset match
+Smarty Wiki
 '''
 import requests
 import re
