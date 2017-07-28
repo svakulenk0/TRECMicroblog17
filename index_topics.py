@@ -13,8 +13,8 @@ from elasticsearch.helpers import bulk
 from settings import *
 from mappings import *
 from topic2wiki import get_wiki_pages
-# from search_google import search_google
-# from scrape_duckduckgo import get_relevant_article
+from search_google import search_google
+from scrape_duckduckgo import get_relevant_article
 
 
 es = Elasticsearch()
@@ -46,7 +46,7 @@ def make_documents(f, index_name):
         yield( doc )
 
 
-def make_documents_expanded(f, index_name, limit=None, wiki=False, google=False, duckduck=False):
+def make_documents_expanded(f, index_name, limit=None, wiki=True, google=True, duckduck=True):
     topics_json = json.load(f)
     if limit:
         topics_json = topics_json[:limit]
@@ -80,15 +80,15 @@ def make_documents_expanded(f, index_name, limit=None, wiki=False, google=False,
                 doc['_source']['wiki_summary'] = wiki_summary
                 doc['_source']['wiki_content'] = wiki_content
 
-        # if google:
-        #     google_result = search_google(topic_description)
-        #     if google_result:
-        #         doc['_source']['search_snippets'] = google_result
+        if google:
+            google_result = search_google(topic_description)
+            if google_result:
+                doc['_source']['search_snippets'] = google_result
 
-        # if duckduck:
-        #     duckduck_result = get_relevant_article(topic_description)
-        #     if duckduck_result:
-        #         doc['_source']['web_page'] = duckduck_result
+        if duckduck:
+            duckduck_result = get_relevant_article(topic_description)
+            if duckduck_result:
+                doc['_source']['web_page'] = duckduck_result
 
         yield( doc )
 
@@ -103,4 +103,4 @@ def load_topics_in_ES(index_name, file=TOPICS, document_processor=make_documents
 
 
 if __name__ == '__main__':
-    load_topics_in_ES(document_processor=make_documents_expanded, index_name='client0')
+    load_topics_in_ES(document_processor=make_documents_expanded, index_name='google')
