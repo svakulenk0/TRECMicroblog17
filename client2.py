@@ -155,8 +155,8 @@ class TopicListener(StreamListener):
                             topid = results['_id']
 
                             # send push notification
-                            # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
-                            # print resp
+                            resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
+                            print resp
                             # assert resp == '<Response [204]>'
 
                             twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
