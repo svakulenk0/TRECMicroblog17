@@ -2,8 +2,10 @@
 23 July 2017
 svakulenko
 
-Twitter stream topic matcher via ElasticSearch expanded with a Wikipedia page
+Twitter stream topic matcher via ElasticSearch expanded with search snippets from Google Custom Search API
 '''
+import requests
+import re
 
 from tweepy.streaming import StreamListener
 from tweepy import Stream, API, OAuthHandler
@@ -13,7 +15,9 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 
-THRESHOLD = 50
+THRESHOLD = 61
+
+INDEX = 'client2'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
@@ -28,7 +32,7 @@ multi = {
             "query": {
                 "multi_match" : {
                     "type": "most_fields",
-                    "fields": ["title", 'description', 'narrative', 'wiki_summary', 'wiki_content']
+                    "fields": ['description', 'narrative', 'search_snippets']
                 }
             }
         }
@@ -54,8 +58,8 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     if results['max_score'] > threshold:
         topic = results['hits'][0]
         # topic title terms have to be subset of the tweet
-        # title_terms = ' '.join(topic['_source']['title_terms'])
-        # if query.find(title_terms) > -1:
+        # title_terms = set(topic['_source']['title_terms'])
+        # if title_terms.issubset(set(tokenize_in_es(query, index))):
         return topic
     return None
 
@@ -64,17 +68,20 @@ def test_search_all():
     for tweet in TRUE+FALSE:
         
         # preprocess tweet
+        # remove urls
+        tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
         tokens = tokenize_in_es(tweet)
         query = ' '.join(f7(tokens))
         print query
 
         # query = "justin bieber will have a concert next tuesday"
-        results = search_all(query, threshold=THRESHOLD, explain=True, index=INDEX)
-        print results['_score']
+        results = search_all(query, threshold=0, explain=True, index=INDEX)
+        if results:
+            print results['_score']
         # print results
 
 
-def search_duplicate_tweets(query, threshold=3, index=INDEX):
+def search_duplicate_tweets(query, threshold=13, index=INDEX):
     results = es.search(index=index, body={"query": {"match": {"tweet": query}}}, doc_type='tweets')['hits']
     if results['max_score'] > threshold:
         return results['hits'][0]
@@ -103,20 +110,22 @@ class TopicListener(StreamListener):
     def on_status(self, status):
         author = status.user.screen_name
         # ignore retweets
-        if not hasattr(status,'retweeted_status'):
+        if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
             text = status.text.replace('\n', '')
-            text = ' '.join([author, text])
+            # text = ' '.join([author, text])
             report = text
-            if status.entities[u'user_mentions']:
-                mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
-                report += '\nMentions: ' + mentions
-                text = ' '.join([text, mentions])
-            if status.entities[u'urls']:
-                report += '\nURL'
-            if [u'media'] in status.entities.keys():
-                report += '\nMEDIA'
+            # if status.entities[u'user_mentions']:
+            #     mentions = ' '.join([entity[u'name'] for entity in status.entities[u'user_mentions']])
+            #     report += '\nMentions: ' + mentions
+            #     text = ' '.join([text, mentions])
+            # if status.entities[u'urls']:
+            #     report += '\nURL'
+            # if [u'media'] in status.entities.keys():
+            #     report += '\nMEDIA'
 
             # preprocess tweet
+            # remove urls
+            text = re.sub(r"(?:\@|https?\://)\S+", "", text)
             tokens = tokenize_in_es(text)
             query = ' '.join(f7(tokens))
 
@@ -139,7 +148,8 @@ class TopicListener(StreamListener):
                     topid = results['_id']
 
                     # send push notification
-                    # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[0])))
+                    # resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[2])))
+                    # print resp
                     # assert resp == '<Response [204]>'
 
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
