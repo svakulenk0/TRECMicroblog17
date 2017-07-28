@@ -147,10 +147,13 @@ class TopicListener(StreamListener):
                     print results['_source']['narrative']
 
                     topid = results['_id']
+                    try:
+                        # send push notification
+                        resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[1])))
+                        print (resp)
+                    except:
+                        print ("Could not push to TREC server")
 
-                    # send push notification
-                    resp = requests.post(API_BASE % ("tweet/%s/%s/%s" %(topid, status.id, CLIENT_IDS[1])))
-                    print resp
                     # assert resp == '<Response [204]>'
 
                     twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
