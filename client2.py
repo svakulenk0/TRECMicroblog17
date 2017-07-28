@@ -17,7 +17,7 @@ from sample_tweets import TRUE, FALSE
 
 THRESHOLD = 61
 
-INDEX = 'client2'
+INDEX = 'google'
 
 # set up Twitter connection
 auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
