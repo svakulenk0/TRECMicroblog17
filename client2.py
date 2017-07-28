@@ -143,6 +143,7 @@ class TopicListener(StreamListener):
                         # check duplicates
                         duplicates = search_duplicate_tweets(query=query)
                         if not duplicates:
+                            
                             # report tweet
                             print ('Tweet:', report)
                             # sent to ES

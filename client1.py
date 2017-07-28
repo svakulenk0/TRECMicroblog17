@@ -73,12 +73,12 @@ def test_search_all():
         tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
         tokens = tokenize_in_es(tweet)
         query = ' '.join(f7(tokens))
-        print query
+        print (query)
 
         # query = "justin bieber will have a concert next tuesday"
         results = search_all(query, threshold=0, explain=True, index=INDEX)
         if results:
-            print results['_score']
+            print (results['_score'])
         # print results
 
 
@@ -136,15 +136,16 @@ class TopicListener(StreamListener):
                 # check duplicates
                 duplicates = search_duplicate_tweets(query=query)
                 if not duplicates:
+
                     # report tweet
-                    print 'Tweet:', report
+                    print ('Tweet:', report)
                     # sent to ES
-                    print 'Query:', query
-                    print results['_score']
+                    print ('Query:', query)
+                    print (results['_score'])
                     title = results['_source']['title']
-                    print title
-                    print results['_source']['description']
-                    print results['_source']['narrative']
+                    print (title)
+                    print (results['_source']['description'])
+                    print (results['_source']['narrative'])
 
                     topid = results['_id']
                     try:
@@ -160,13 +161,13 @@ class TopicListener(StreamListener):
 
                     # store tweets that have been reported to ES
                     store_tweet(topid, query)
-                    print '\n'
+                    print ('\n')
 
         return True
 
 
     def on_error(self, status_code):
-      print status_code, 'error code'
+      print (status_code, 'error code')
 
 
 def stream_tweets():
@@ -179,11 +180,11 @@ def stream_tweets():
     while True:
         try:
             stream = Stream(auth_handler, listener)
-            print 'Listening...'
+            print ('Listening...')
             stream.sample(languages=['en'])
         except Exception as e:
             # reconnect on exceptions
-            print e
+            print (e)
             continue
 
 
