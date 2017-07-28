@@ -138,7 +138,6 @@ class TopicListener(StreamListener):
                     print(query)
                     # query elastic search
                     results = search_all(query=query, threshold=THRESHOLD)
-                    print results
                     if results:
                         # check duplicates
                         duplicates = search_duplicate_tweets(query=query)
