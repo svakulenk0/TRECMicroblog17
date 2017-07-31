@@ -17,7 +17,6 @@ from settings import *
 from tweet_preprocess import f7
 
 
-
 class TopicListener(StreamListener):
     '''
     Overrides Tweepy class for Twitter Streaming API
@@ -108,6 +107,8 @@ class TopicListener(StreamListener):
                                 print ("Rate limit exceeded. Topic is added to the ignore list.")
                         except:
                             print ("Could not push to TREC server")
+                    else:
+                        print ("Rate limit exceeded. Tweet is skipped.") 
 
                     # assert resp == '<Response [204]>'
 
