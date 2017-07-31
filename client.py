@@ -105,6 +105,9 @@ class TopicListener(StreamListener):
                                 # add topic to the skip list
                                 self.topics_exceeded.append(topid)
                                 print ("Rate limit exceeded. Topic is added to the ignore list.")
+                            else:
+                                # store tweets that have been reported to ES
+                                self.store_tweet(topid, query)
                         except:
                             print ("Could not push to TREC server")
                     else:
@@ -114,8 +117,6 @@ class TopicListener(StreamListener):
 
                     self.twitter_client.update_status(title + ' https://twitter.com/%s/status/%s' % (author, status.id))
 
-                    # store tweets that have been reported to ES
-                    self.store_tweet(topid, query)
                     print ('\n')
 
         return True
@@ -170,4 +171,3 @@ class TopicListener(StreamListener):
                 # reconnect on exceptions
                 print (e)
                 continue
-
