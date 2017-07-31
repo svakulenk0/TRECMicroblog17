@@ -16,8 +16,8 @@ from settings import *
 # 85
 THRESHOLD = 36
 
-# INDEX = 'client1'
-INDEX = 'client2'
+INDEX = 'client1'
+# INDEX = 'client2'
 
 
 WIKI = {
