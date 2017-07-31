@@ -55,7 +55,7 @@ def stream_tweets():
     Connect to Twitter API and fetch relevant tweets from the stream
     '''
     listener = TopicListener()
-    listener.set_up(threshold=0, index_name=INDEX, request=WIKI, filter_subset=True)
+    listener.set_up(threshold=THRESHOLD, index_name=INDEX, request=WIKI, filter_subset=True)
     listener.start_streaming()
 
 
