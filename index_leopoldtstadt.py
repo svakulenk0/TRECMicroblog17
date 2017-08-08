@@ -26,12 +26,15 @@ mapping = {
         'topics': {
           'properties': {
             'keywords': {'type': 'text', 'analyzer': 'german'},
+            # 'keywords': {'type': 'text', 'analyzer': 'standard'},
             'search_snippets': {'type': 'text', 'analyzer': 'german'},
+            # 'search_snippets': {'type': 'text', 'analyzer': 'standard'},
           }
         },
         'tweets': {
           'properties': {
             'tweet': {'type': 'text', 'analyzer': 'german'},
+            # 'tweet': {'type': 'text', 'analyzer': 'standard'},
           }
         }
       }
@@ -50,7 +53,7 @@ def get_LODaLot(keywords='Leopoldstadt'):
 
 
 def get_wiki(keywords='Leopoldstadt'):
-    wiki = get_wiki_pages(keywords)
+    wiki = get_wiki_pages(keywords, lang='de')
     if wiki:
         print (wiki[2])
 
@@ -75,10 +78,10 @@ def load_topics_in_ES(topics, index_name='communidata', wiki=True, google=True, 
 
         if wiki:
             # query expansion with Wikipedia articles
-            wiki_result = get_wiki_pages(topic)
+            wiki_result = get_wiki_pages(topic, lang='de')
             if wiki_result:
                 wiki_title, wiki_summary, wiki_content = wiki_result
-                print (wiki_title)
+                print (wiki_summary)
                 doc['wiki_title'] = wiki_title
                 doc['wiki_summary'] = wiki_summary
                 doc['wiki_content'] = wiki_content

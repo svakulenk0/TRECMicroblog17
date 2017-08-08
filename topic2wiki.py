@@ -30,7 +30,8 @@ TOPIC = {
 #     print (topic_concepts)
 
 
-def find_in_wiki(string):
+def find_in_wiki(string, lang):
+    wikipedia.set_lang(lang)
     return wikipedia.search(string)
 
 
@@ -44,8 +45,8 @@ def wiki_preprocess(content):
     return content
 
 
-def get_wiki_pages(string, maxpages=1):
-    wiki_page_titles = find_in_wiki(string)[:maxpages]
+def get_wiki_pages(string, maxpages=1, lang='en'):
+    wiki_page_titles = find_in_wiki(string, lang)[:maxpages]
     
     for page_title in wiki_page_titles:
         return get_wiki_page(page_title)
