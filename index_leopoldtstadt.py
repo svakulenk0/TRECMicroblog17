@@ -14,8 +14,9 @@ from scrape_duckduckgo import get_relevant_article
 # do not track similar keywords since it will increase IDF
 # SEEDS = ['Österreich', 'Wien', 'Leopoldstadt', 'Stuwerviertel']
 
-# provide alternative keywords to control for stopwords
-SEEDS = ['Stuwerviertel', 'Kreuzberg', 'Wiedikon']
+# provide alternative keywords
+# add random, also neutral completely unrelated, keywords but which have wiki pages in the language of interest to reduce the contribution from stopwords
+SEEDS = ['Stuwerviertel', 'Kreuzberg', 'Wiedikon', '']
 
 
 mapping = {
@@ -30,6 +31,9 @@ mapping = {
             'keywords': {'type': 'text', 'analyzer': 'german'},
             # 'keywords': {'type': 'text', 'analyzer': 'standard'},
             'search_snippets': {'type': 'text', 'analyzer': 'german'},
+            'wiki_title': {'type': 'text', 'analyzer': 'german'},
+            'wiki_summary': {'type': 'text', 'analyzer': 'german'},
+            'wiki_content': {'type': 'text', 'analyzer': 'german'},
             # 'search_snippets': {'type': 'text', 'analyzer': 'standard'},
           }
         },
