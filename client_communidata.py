@@ -225,5 +225,5 @@ def stream_tweets():
 
 if __name__ == '__main__':
     # test_search_all('Habe eben „Thirteen Days“ über die Kubakrise angeschaut. Beruhigend, dass wir mit #Trump doch weiter entfernt von WW3 sind, als damals.')
-    test_search_Twitter(query='kreuzberg')
-    # stream_tweets()
+    # test_search_Twitter(query='kreuzberg')
+    stream_tweets()
