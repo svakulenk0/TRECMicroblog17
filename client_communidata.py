@@ -82,15 +82,17 @@ def test_search_Twitter(query='Stuwerviertel'):
             print status.place.country
             print status.place.full_name
         urls = ' '.join([process_url(url['expanded_url']) for url in status.entities['urls']])
+        if hasattr(status, 'retweeted_status'):
+            urls = ' '.join([process_url(url['expanded_url']) for url in status.retweeted_status.entities['urls']])
         text = status.text
         author = status.user.screen_name
         tweet = ' '.join([author, text, urls])
         results = search_all(tweet, threshold=0, explain=True, index=INDEX)
         if results:
             score = (results['_score'])
-            # if score < THRESHOLD:
-            #     print results['_explanation']
-            #     print status
+            if score < THRESHOLD:
+                # print results['_explanation']
+                print status
             print tweet
             print score
             print (results['_source']['keywords'])
