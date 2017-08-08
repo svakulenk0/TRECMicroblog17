@@ -23,21 +23,28 @@ def load_topics(file=TOPICS):
             print title
 
 
-def clean_up_my_timeline(ntweets=100):
+def remove_tweets(twitter_client, ntweets=100):
+    '''
+    Recursive call to remove all tweets from the timeline
+    '''
+    timeline = twitter_client.user_timeline(count = ntweets)
+    nleft = len(timeline)
+    print "Found: %d" % (nleft)
+    if nleft > 0:
+        print "Removing..."
+        # Delete tweets one by one
+        for t in timeline:
+            twitter_client.destroy_status(t.id)
+        remove_tweets(twitter_client)
+
+
+def clean_up_my_timeline():
     # set up Twitter connection
     auth_handler = OAuthHandler(APP_KEY, APP_SECRET)
     auth_handler.set_access_token(OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
     twitter_client = API(auth_handler)
-
-    timeline = twitter_client.user_timeline(count = ntweets)
-
-    print "Found: %d" % (len(timeline))
-    print "Removing..."
-
-    # Delete tweets one by one
-    for t in timeline:
-        twitter_client.destroy_status(t.id)
+    remove_tweets(twitter_client)
 
 
 if __name__ == '__main__':
-    load_titles()
+    clean_up_my_timeline()
