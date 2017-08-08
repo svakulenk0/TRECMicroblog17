@@ -83,7 +83,7 @@ def test_search_all():
         if results:
             print (results['_score'])
             print (results['_source']['keywords'])
-            print '\n'
+            print ('\n')
         # print results
 
 
