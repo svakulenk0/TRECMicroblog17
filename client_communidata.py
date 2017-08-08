@@ -17,8 +17,8 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
-
-THRESHOLD = 3
+# 4.1
+THRESHOLD = 8
 
 INDEX = 'communidata'
 
@@ -83,8 +83,9 @@ def test_search_Twitter(query='Stuwerviertel'):
         results = search_all(tweet, threshold=0, explain=True, index=INDEX)
         if results:
             score = (results['_score'])
-            if score < THRESHOLD:
-                print results['_explanation']
+            # if score < THRESHOLD:
+            #     print results['_explanation']
+            #     print status
             print tweet
             print score
             print (results['_source']['keywords'])
@@ -92,20 +93,23 @@ def test_search_Twitter(query='Stuwerviertel'):
 
 
 def test_search_all():
-    for tweet in ['Im in Stuwerviertel', "wien ist schön", "#leopoldstadt"]:
+    for tweet in ['Für die "Hölle von Q", werden noch Helfer gesucht. Das Event ist vom 1-3.09.2017']:
         
         # preprocess tweet
         # remove urls
         tweet = re.sub(r"(?:\@|https?\://)\S+", "", tweet)
         tokens = tokenize_in_es(tweet)
         query = ' '.join(f7(tokens))
-        print (query)
 
         # query = "justin bieber will have a concert next tuesday"
         results = search_all(query, threshold=0, explain=True, index=INDEX)
         if results:
+            print (results['_explanation'])
+            
+            print (query)
             print (results['_score'])
             print (results['_source']['keywords'])
+
             print ('\n')
         # print results
 
@@ -216,5 +220,5 @@ def stream_tweets():
 
 if __name__ == '__main__':
     # test_search_all()
-    # test_search_Twitter()
+    # test_search_Twitter(query='Wiedikon')
     stream_tweets()
