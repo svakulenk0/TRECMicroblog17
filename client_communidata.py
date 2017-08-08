@@ -18,7 +18,7 @@ from elasticsearch import Elasticsearch
 from settings import *
 from sample_tweets import TRUE, FALSE
 # 4.1
-THRESHOLD = 8
+THRESHOLD = 8.1
 
 INDEX = 'communidata'
 
@@ -68,6 +68,11 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
     return None
 
 
+def process_url(url):
+    tokens = re.findall(r"[\w']+", url.lower())
+    return ' '.join(tokens)
+
+
 def test_search_Twitter(query='Stuwerviertel'):
     tweets = twitter_client.search(q=query)
     for status in tweets:
@@ -76,7 +81,7 @@ def test_search_Twitter(query='Stuwerviertel'):
         if status.place:
             print status.place.country
             print status.place.full_name
-        urls = ' '.join([url['expanded_url'] for url in status.entities['urls']])
+        urls = ' '.join([process_url(url['expanded_url']) for url in status.entities['urls']])
         text = status.text
         author = status.user.screen_name
         tweet = ' '.join([author, text, urls])
@@ -92,8 +97,8 @@ def test_search_Twitter(query='Stuwerviertel'):
             print ('\n')
 
 
-def test_search_all():
-    for tweet in ['Für die "Hölle von Q", werden noch Helfer gesucht. Das Event ist vom 1-3.09.2017']:
+def test_search_all(tweet):
+    for tweet in [tweet]:
         
         # preprocess tweet
         # remove urls
@@ -219,6 +224,6 @@ def stream_tweets():
 
 
 if __name__ == '__main__':
-    # test_search_all()
-    # test_search_Twitter(query='Wiedikon')
-    stream_tweets()
+    # test_search_all('Habe eben „Thirteen Days“ über die Kubakrise angeschaut. Beruhigend, dass wir mit #Trump doch weiter entfernt von WW3 sind, als damals.')
+    test_search_Twitter(query='kreuzberg')
+    # stream_tweets()
