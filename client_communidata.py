@@ -17,8 +17,8 @@ from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
-# 2.1
-THRESHOLD = 2
+# 2.3
+THRESHOLD = 6
 
 INDEX = 'communidata'
 
