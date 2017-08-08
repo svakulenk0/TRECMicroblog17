@@ -16,7 +16,7 @@ from scrape_duckduckgo import get_relevant_article
 
 # provide alternative keywords
 # add random, also neutral completely unrelated, keywords but which have wiki pages in the language of interest to reduce the contribution from stopwords
-SEEDS = ['Stuwerviertel', 'Kreuzberg', 'Wiedikon', '']
+SEEDS = ['Stuwerviertel', 'Kreuzberg', 'Wiedikon']
 
 
 mapping = {
