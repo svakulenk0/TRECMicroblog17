@@ -13,7 +13,7 @@ from scrape_duckduckgo import get_relevant_article
 
 # SEED = 'Leopoldstadt'
 # SEEDS = ['Österreich', 'Wien', 'Leopoldstadt', 'Stuwerviertel']
-SEEDS = ['Leopoldstadt', 'Stuwerviertel']
+SEEDS = ['Stuwerviertel']
 
 
 mapping = {
