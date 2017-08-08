@@ -11,9 +11,11 @@ from search_google import search_google
 from scrape_duckduckgo import get_relevant_article
 
 
-# SEED = 'Leopoldstadt'
+# do not track similar keywords since it will increase IDF
 # SEEDS = ['Österreich', 'Wien', 'Leopoldstadt', 'Stuwerviertel']
-SEEDS = ['Stuwerviertel']
+
+# provide alternative keywords to control for stopwords
+SEEDS = ['Stuwerviertel', 'Kreuzberg', 'Wiedikon']
 
 
 mapping = {
