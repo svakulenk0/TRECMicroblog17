@@ -11,14 +11,14 @@ import requests
 import re
 
 from tweepy.streaming import StreamListener
-from tweepy import Stream, API, OAuthHandler
+from tweepy import Stream, API, OAuthHandler, Cursor
 
 from elasticsearch import Elasticsearch
 
 from settings import *
 from sample_tweets import TRUE, FALSE
-# 2.3
-THRESHOLD = 6
+
+THRESHOLD = 3
 
 INDEX = 'communidata'
 
@@ -66,6 +66,29 @@ def search_all(query, threshold=THRESHOLD, explain=False, index=INDEX):
             # if title_terms.issubset(set(tokenize_in_es(query, index))):
             return topic
     return None
+
+
+def test_search_Twitter(query='Stuwerviertel'):
+    tweets = twitter_client.search(q=query)
+    for status in tweets:
+        # print status.location
+        # print status.time_zone
+        if status.place:
+            print status.place.country
+            print status.place.full_name
+        urls = ' '.join([url['expanded_url'] for url in status.entities['urls']])
+        text = status.text
+        author = status.user.screen_name
+        tweet = ' '.join([author, text, urls])
+        results = search_all(tweet, threshold=0, explain=True, index=INDEX)
+        if results:
+            score = (results['_score'])
+            if score < THRESHOLD:
+                print results['_explanation']
+            print tweet
+            print score
+            print (results['_source']['keywords'])
+            print ('\n')
 
 
 def test_search_all():
@@ -193,4 +216,5 @@ def stream_tweets():
 
 if __name__ == '__main__':
     # test_search_all()
+    # test_search_Twitter()
     stream_tweets()
