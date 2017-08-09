@@ -152,6 +152,11 @@ class TopicListener(StreamListener):
     '''
 
     def on_status(self, status):
+        print(status.text)
+        author = status.user.screen_name
+        twitter_client.update_status(' https://twitter.com/%s/status/%s' % (author, status.id))
+
+    def on_status_old(self, status):
         author = status.user.screen_name
         # ignore retweets
         if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
@@ -180,28 +185,27 @@ class TopicListener(StreamListener):
                     results = search_all(query=query, threshold=THRESHOLD)
                     if results:
                         # check duplicates
-                        duplicates = search_duplicate_tweets(query=query)
-                        if not duplicates:
+                        # duplicates = search_duplicate_tweets(query=query)
+                        # if not duplicates:
 
-                            # report tweet
-                            print ('Tweet:', report)
-                            # sent to ES
-                            print ('Query:', query)
-                            print (results['_score'])
-                            topic = results['_source']['keywords']
-                            print (topic)
+                        # report tweet
+                        print ('Tweet:', report)
+                        # sent to ES
+                        print ('Query:', query)
+                        print (results['_score'])
+                        topic = results['_source']['keywords']
+                        print (topic)
 
 
-                            twitter_client.update_status(topic + ' https://twitter.com/%s/status/%s' % (author, status.id))
-                            
-                            # store tweets that have been reported to ES
-                            topid = results['_id']
-                            store_tweet(topid, query)
-                            
-                            print ('\n')
+                        # twitter_client.update_status(topic + ' https://twitter.com/%s/status/%s' % (author, status.id))
+                        
+                        # store tweets that have been reported to ES
+                        # topid = results['_id']
+                        # store_tweet(topid, query)
+                        
+                        print ('\n')
 
         return True
-
 
     def on_error(self, status_code):
       print (status_code, 'error code')
@@ -218,7 +222,8 @@ def stream_tweets():
         try:
             stream = Stream(auth_handler, listener)
             print ('Listening...')
-            stream.sample(languages=['de'])
+            # stream.sample(languages=['de'])
+            stream.filter(track=['stuwerviertel'])
         except Exception as e:
             # reconnect on exceptions
             print (e)
@@ -227,5 +232,5 @@ def stream_tweets():
 
 if __name__ == '__main__':
     # test_search_all('Habe eben „Thirteen Days“ über die Kubakrise angeschaut. Beruhigend, dass wir mit #Trump doch weiter entfernt von WW3 sind, als damals.')
-    # test_search_Twitter(query='kreuzberg')
+    # test_search_Twitter(query='stuwerviertel')
     stream_tweets()
