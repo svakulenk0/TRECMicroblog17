@@ -152,9 +152,11 @@ class TopicListener(StreamListener):
     '''
 
     def on_status(self, status):
-        print(status.text)
-        author = status.user.screen_name
-        twitter_client.update_status(' https://twitter.com/%s/status/%s' % (author, status.id))
+        # ignore retweets
+        if not hasattr(status,'retweeted_status') and status.in_reply_to_status_id == None:
+            print(status.text)
+            author = status.user.screen_name
+            twitter_client.update_status(' https://twitter.com/%s/status/%s' % (author, status.id))
 
     def on_status_old(self, status):
         author = status.user.screen_name
