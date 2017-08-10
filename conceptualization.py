@@ -10,8 +10,8 @@ import rdflib
 # from tweet_preprocess import *
 from settings import BABELFY_KEY
 
-# filter out only dbpedia concepts by labels &subject=*dbpedia*
-LOTUS_API = "http://lotus.lodlaundromat.org/retrieve?langtag=en&match=%s&predicate=label&minmatch=100&cutoff=0.005&rank=%s&size=%i&string=%s"
+# filter out only dbpedia concepts by labels &subject=*dbpedia* langtag=en&
+LOTUS_API = "http://lotus.lodlaundromat.org/retrieve?match=%s&predicate=label&minmatch=100&cutoff=0.005&rank=%s&size=%i&string=%s"
 LODALOT_API = 'http://webscale.cc:3001/LOD-a-lot?%s=%s'
 
 BABELFY_API = 'https://babelfy.io/v1/disambiguate'
@@ -53,6 +53,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[], size=10, f
             if verbose:
                 print (found_text)
                 print (concepts)
+                print ('\n')
             found_texts.append(found_text)
             found_concepts.append(concepts)
             # process the rest of the string
@@ -61,7 +62,7 @@ def lotus_recursive_call(original, found_texts=[], found_concepts=[], size=10, f
             # skip the 1st word
             leftover = " ".join(original.split(" ")[1:])
         if leftover:
-            lotus_recursive_call(leftover, found_texts, found_concepts, filter_ns=filter_ns)
+            lotus_recursive_call(leftover, found_texts, found_concepts, filter_ns=filter_ns, verbose=verbose)
         
         if found_concepts:
             return found_concepts
@@ -86,7 +87,8 @@ def loop_concept_expansion(concept_uris, visited=[], nhops=2, descriptions=[]):
     return (visited, descriptions)
 
 
-def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
+def get_concepts_from_lotus(text, match='phrase', rank='lengthnorm', size=5, filter_ns=False):
+# def get_concepts_from_lotus(text, match='terms', rank='lengthnorm', size=5, filter_ns='dbpedia'):
     '''
     recursive call to the API
     returns a list of concept URIs from LOTUS API
@@ -150,7 +152,7 @@ def lookup_nns(concept_uri, position='subject'):
         descriptions = set()
         for s, p, o in g:
             if type(o) == rdflib.term.URIRef:
-                nns.add(str(o))
+                nns.add(str(o.encode('utf-8')))
             # collect English descriptions
             elif type(o) == rdflib.term.Literal and o.language == 'en':
                 descriptions.add(str(o))
@@ -158,6 +160,18 @@ def lookup_nns(concept_uri, position='subject'):
         return (list(nns), list(descriptions))
 
     return None, None
+
+
+def test_babelfy():
+    query = 'Hawaii Renewable Energy Generation By Resource'
+    query = 'stuwerviertel'
+    print babelfy_query(query)
+
+
+def test_lotus():
+    query = 'Hawaii Renewable Energy Generation By Resource'
+    query = 'stuwerviertel'
+    concepts = lotus_recursive_call(query, filter_ns=False, size=10, verbose=True)
 
 
 def test_get_concepts():
@@ -168,11 +182,19 @@ def test_get_concepts():
     # for term in SAMPLE_CONCEPTS:
     #     print term
 
-    concepts = babelfy_query("What injuries happened in this year's Tour de France?")
-    # concepts = lotus_recursive_call('IT security')
-    # for concept_uri in concepts:
-    #     print concept_uri
-    #     lookup(concept_uri)
+    # concepts = babelfy_query("What injuries happened in this year's Tour de France?")
+    query = 'stuwerviertel'
+    concepts = lotus_recursive_call(query, filter_ns=False, size=10, verbose=True)
+    if concepts:
+        for concept_uris in concepts:
+            print (concept_uris)
+
+            # expand concepts
+            concepts, descriptions = loop_concept_expansion(concept_uris)
+            print (concepts)
+            for hop in descriptions:
+                for description in hop:
+                    print (description)
 
     # print lookup('http://dbpedia.org/resource/IT_Security')
 
