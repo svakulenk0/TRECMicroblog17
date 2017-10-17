@@ -10,9 +10,12 @@ import rdflib
 # from tweet_preprocess import *
 from settings import BABELFY_KEY
 
-# filter out only dbpedia concepts by labels &subject=*dbpedia* langtag=en&
-LOTUS_API = "http://lotus.lodlaundromat.org/retrieve?match=%s&predicate=label&minmatch=100&cutoff=0.005&rank=%s&size=%i&string=%s"
-LODALOT_API = 'http://webscale.cc:3001/LOD-a-lot?%s=%s'
+# filter out only dbpedia concepts by labels &subject=*dbpedia* 
+LOTUS_API = "http://lotus.lodlaundromat.org/retrieve?match=%s&predicate=label&langtag=en&minmatch=100&cutoff=0.005&rank=%s&size=%i&string=%s"
+# LODALOT_API = 'http://webscale.cc:3001/LOD-a-lot?%s=%s'
+LODALOT_API = 'http://webscale.cc:3001/triple?%s=%s'
+# http://webscale.cc:3001/triple?subject=BookMaggie%3A_A_Girl_of_the_Streets
+# http://webscale.cc:3001/triple?subject=A-Ha:Top/Arts/Music/Bands_and_Artists/A/A-Ha
 
 BABELFY_API = 'https://babelfy.io/v1/disambiguate'
 # TODO tokenization
@@ -41,50 +44,72 @@ def babelfy_query(text, lang='EN', match='EXACT_MATCHING', candidates='TOP'):
     return [hit['DBpediaURL'] for hit in resp.json()]
 
 
-def lotus_recursive_call(original, found_texts=[], found_concepts=[], size=10, filter_ns=False, verbose=False):
+class SnowBall():
     '''
+    Helper class for graph traversal
     '''
-    # avoid calling the API several times for the same term
-    if original not in found_texts:
-        # print original
-        concepts, found_text = get_concepts_from_lotus(original, size=size, filter_ns=filter_ns)
-        
-        if found_text:
+    def __init__(self, max_depth=3):
+        '''
+        max_depth <int> regulates number of nodes to expand termination condition for the graph traversal
+        '''
+        self.concepts = []
+        self.neighbors = []
+        self.max_depth = max_depth
+
+    def lotus_recursive_call(self, original, found_texts=[], size=10, filter_ns=False, verbose=False):
+        '''
+        '''
+        # avoid calling the API several times for the same term
+        if original not in found_texts:
+            # print original
+            concepts, found_text = get_concepts_from_lotus(original, size=size, filter_ns=filter_ns)
+            
+            if found_text:
+                if verbose:
+                    print (found_text)
+                    print (concepts)
+                    print ('\n')
+                found_texts.append(found_text)
+                self.concepts.append(concepts)
+                # process the rest of the string
+                leftover = original.replace(found_text, "").strip()
+            else:
+                # skip the 1st word
+                leftover = " ".join(original.split(" ")[1:])
+            if leftover:
+                lotus_recursive_call(leftover, found_texts, filter_ns=filter_ns, verbose=verbose)
+
+    def traverse_graph(self, concept, position, verbose=False):
+        # print concept
+        # print position
+        nns, description = lookup_nns(concept, position)
+        # nns, description = lookup_nns(concept, position='object')
+        # if description:
+        #     descriptions.append(description)
+        if nns:
             if verbose:
-                print (found_text)
-                print (concepts)
-                print ('\n')
-            found_texts.append(found_text)
-            found_concepts.append(concepts)
-            # process the rest of the string
-            leftover = original.replace(found_text, "").strip()
-        else:
-            # skip the 1st word
-            leftover = " ".join(original.split(" ")[1:])
-        if leftover:
-            lotus_recursive_call(leftover, found_texts, found_concepts, filter_ns=filter_ns, verbose=verbose)
-        
-        if found_concepts:
-            return found_concepts
-        else:
-            return None
+                print concept
+                print position
+                print nns
+                print '\n'
+            # recursion
+            self.loop_concept_expansion(nns)
+        # return (visited, descriptions)
 
 
-def loop_concept_expansion(concept_uris, visited=[], nhops=2, descriptions=[]):
-    if len(visited) < nhops:
+    def loop_concept_expansion(self, concept_uris, descriptions=[]):
+        '''
+        finds the immediate neighbourhood 
+        '''
+        # print len(self.neighbors)
+        # print nhops
+        # if len(self.neighbors) < self.width:
         for concept in concept_uris:
-            if concept not in visited:
-                nns, description = lookup_nns(concept)
-                if description:
-                    descriptions.append(description)
-                visited.append(concept)
-                if nns:
-                    # print concept
-                    # print nns
-                    # print '\n'
-                    # recursion
-                    loop_concept_expansion(nns, visited)
-    return (visited, descriptions)
+            if concept not in self.neighbors:
+                self.neighbors.append(concept)
+                self.traverse_graph(concept, position='subject')
+                self.traverse_graph(concept, position='object')
+        # return (visited, descriptions)
 
 
 def get_concepts_from_lotus(text, match='phrase', rank='lengthnorm', size=5, filter_ns=False):
@@ -123,6 +148,9 @@ def get_concepts_from_lotus(text, match='phrase', rank='lengthnorm', size=5, fil
 
 
 def lookup(concept_uri, position='subject'):
+    '''
+    check all positions, i.e. explore the graph in both directions
+    '''
     # call ldf
     resp = requests.get(LODALOT_API % (position, concept_uri))
     # print resp.content
@@ -163,14 +191,14 @@ def lookup_nns(concept_uri, position='subject'):
 
 
 def test_babelfy():
-    query = 'Hawaii Renewable Energy Generation By Resource'
-    query = 'stuwerviertel'
+    query = 'renewable energy'
+    # query = 'stuwerviertel'
     print babelfy_query(query)
 
 
 def test_lotus():
     query = 'Hawaii Renewable Energy Generation By Resource'
-    query = 'stuwerviertel'
+    # query = 'stuwerviertel'
     concepts = lotus_recursive_call(query, filter_ns=False, size=10, verbose=True)
 
 
@@ -183,7 +211,8 @@ def test_get_concepts():
     #     print term
 
     # concepts = babelfy_query("What injuries happened in this year's Tour de France?")
-    query = 'stuwerviertel'
+
+    query = 'New Distributed Renewable Energy Systems Installed in Hawaii'
     concepts = lotus_recursive_call(query, filter_ns=False, size=10, verbose=True)
     if concepts:
         for concept_uris in concepts:
@@ -205,4 +234,5 @@ def test_get_concepts():
 
 
 if __name__ == '__main__':
+    # test_babelfy()
     test_get_concepts()

@@ -4,8 +4,8 @@ svakulenko
 24 july 2017
 '''
 
-from conceptualization import get_concepts_from_lotus, lookup, lotus_recursive_call
-from process_tweets import tweet_lookup, loop_concept_expansion
+from conceptualization import get_concepts_from_lotus, lookup, SnowBall
+from process_tweets import tweet_lookup
 
 
 TOPIC = {
@@ -29,16 +29,34 @@ FALSE = [
         ]
 
 
-def find_path(topic, tweet):
+def find_path(topic, tweet, debug=False):
     # link topic
-    concept, text = get_concepts_from_lotus(topic)
-    concept_uri = list(concept)[0]
-    print concept_uri
+    # concept, text = get_concepts_from_lotus(topic)
+    # concept_uri = list(concept)[0]
+    # print concept_uri
 
     # tweet_concepts = tweet_lookup(topic)
     # for token in tweet_concepts:
     #     print (token)
     #     loop_concept_expansion(token, nhops=13)
+
+    # find concepts in topic text
+    print topic
+    topic_subgraph = SnowBall()
+    topic_subgraph.lotus_recursive_call(topic, filter_ns=False, size=10, verbose=debug)
+    # if topic_concepts:
+        # start traversing the graph
+    for concept_uris in topic_subgraph.concepts:
+        # print (concept_uris)
+
+        # expand concepts
+        topic_subgraph.loop_concept_expansion(concept_uris)
+        print (topic_subgraph.neighbors)
+
+            # print (topic_neighbors.visited)
+            # for hop in descriptions:
+            #     for description in hop:
+            #         print (description)
 
     # concepts = lotus_recursive_call(topic, filter_ns=False, size=10, verbose=True)
     # if concepts:
@@ -46,20 +64,40 @@ def find_path(topic, tweet):
     #         print (concept_uris)
 
     # link tweet
+    print tweet
+    tweet_subgraph = SnowBall()
+    tweet_subgraph.lotus_recursive_call(tweet, filter_ns=False, size=10, verbose=debug)
+    print tweet_subgraph.concepts
+    # if tweet_subgraph.concepts:
+        # start traversing the graph
+        # retrieve concept neighbourhood for the tweet
+    for concept_uris in tweet_subgraph.concepts:
+        # print (concept_uris)
+
+        # expand concepts
+        tweet_subgraph.loop_concept_expansion(concept_uris)
+        print (tweet_subgraph.neighbors)
+
+
+    # check set overlap between the concept neighbours of the topic and the tweet
+    print [concept for concept in topic_subgraph.neighbors if concept in tweet_subgraph.neighbors]
+
+
+
     # concept, text = get_concepts_from_lotus(tweet)
     # print concept
     # concept_uri = list(concept)[0]
     # print concept_uri
-    tweet_concepts = tweet_lookup(tweet)
-    for token in tweet_concepts:
-        print (token)
-        loop_concept_expansion(token, nhops=2)
+      # tweet_concepts = tweet_lookup(tweet)
+      # for token in tweet_concepts:
+      #     print (token)
+      #     loop_concept_expansion(token, nhops=2)
     # concept_uri = list(concept)[0]
     # print concept_uri
     # print lookup(concept_uri)
 
 
-def test_find_path():
+def test_find_path(topic=TOPIC['title'], tweet=SAMPLE_CONCEPT):
     '''
     Make sure we can find the path between "IT security" and "malware"
     e.g.
@@ -69,8 +107,8 @@ def test_find_path():
     linksTo
     https://en.wikipedia.org/wiki/Malware
     '''
-    topic = TOPIC['title']
-    tweet = SAMPLE_CONCEPT
+    # topic = 'IT security'
+    # tweet = 'bread'
     find_path(topic, tweet)
 
 
